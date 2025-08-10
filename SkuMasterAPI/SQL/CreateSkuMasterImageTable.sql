@@ -1,0 +1,19 @@
+-- Create SKUMASTERIMAGE table
+CREATE TABLE SKUMASTERIMAGE (
+    ID int IDENTITY(1,1) PRIMARY KEY,
+    MASTER_ID int NOT NULL,
+    IMAGE_NAME varchar(255) NOT NULL,
+    CONSTRAINT FK_SKUMASTERIMAGE_SKUMASTER 
+        FOREIGN KEY (MASTER_ID) 
+        REFERENCES SKUMASTER(SKU_KEY)
+        ON DELETE CASCADE
+);
+
+-- Create index on MASTER_ID for better performance
+CREATE INDEX IX_SKUMASTERIMAGE_MASTER_ID ON SKUMASTERIMAGE(MASTER_ID);
+
+-- Add some sample data (optional)
+-- INSERT INTO SKUMASTERIMAGE (MASTER_ID, IMAGE_NAME) VALUES 
+-- (18791, 'product_18791_main.jpg'),
+-- (18791, 'product_18791_detail.jpg'),
+-- (18792, 'product_18792_main.jpg');

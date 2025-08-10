@@ -1,0 +1,6 @@
+@SkuMasterAPI_HostAddress = http://localhost:5182
+
+GET {{SkuMasterAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
