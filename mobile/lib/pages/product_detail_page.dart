@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
-import '../models/product.dart';
+import '../models/sku_master.dart';
+import '../services/dio_service.dart';
+import 'update_product_page.dart';
 
 class ProductDetailPage extends StatefulWidget {
-  final Product product;
+  final int skuKey;
 
-  const ProductDetailPage({super.key, required this.product});
+  const ProductDetailPage({super.key, required this.skuKey});
 
   @override
   State<ProductDetailPage> createState() => _ProductDetailPageState();
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
+  final ApiService _apiService = ApiService();
   final PageController _pageController = PageController();
+
+  SkuMasterDetail? _product;
+  bool _isLoading = true;
+  bool _hasError = false;
+  String _errorMessage = '';
   int _currentImageIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProductDetail();
+  }
 
   @override
   void dispose() {
@@ -20,306 +34,164 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final product = widget.product;
+  Future<void> _loadProductDetail() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+      _errorMessage = '';
+    });
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(product.productName),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image Gallery Section
-            Container(
-              height: 300,
-              width: double.infinity,
-              child: product.imageUrl.isNotEmpty
-                  ? Stack(
-                      children: [
-                        PageView.builder(
-                          controller: _pageController,
-                          onPageChanged: (index) {
-                            setState(() {
-                              _currentImageIndex = index;
-                            });
-                          },
-                          itemCount: product.imageUrl.length,
-                          itemBuilder: (context, index) {
-                            return Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 8),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  product.imageUrl[index],
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      color: Colors.grey[300],
-                                      child: const Center(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.image_not_supported,
-                                              size: 50,
-                                              color: Colors.grey,
-                                            ),
-                                            SizedBox(height: 8),
-                                            Text(
-                                              'ไม่สามารถโหลดรูปภาพได้',
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+    try {
+      final product = await _apiService.getSkuMasterDetail(widget.skuKey);
+      setState(() {
+        _product = product;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+        _errorMessage = e.toString();
+      });
+    }
+  }
 
-                        // Image indicators
-                        if (product.imageUrl.length > 1)
-                          Positioned(
-                            bottom: 16,
-                            left: 0,
-                            right: 0,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: List.generate(
-                                product.imageUrl.length,
-                                (index) => Container(
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                  ),
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: _currentImageIndex == index
-                                        ? Colors.white
-                                        : Colors.white.withOpacity(0.5),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+  Widget _buildImageGallery() {
+    if (_product?.imageUrls.isEmpty ?? true) {
+      return Container(
+        height: 300,
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
+              SizedBox(height: 8),
+              Text(
+                'ไม่มีรูปภาพ',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
-                        // Image counter
-                        if (product.imageUrl.length > 1)
-                          Positioned(
-                            top: 16,
-                            right: 16,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.6),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                '${_currentImageIndex + 1}/${product.imageUrl.length}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    )
-                  : Container(
-                      color: Colors.grey[300],
+    return Column(
+      children: [
+        // Main Image
+        Container(
+          height: 300,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentImageIndex = index;
+                });
+              },
+              itemCount: _product!.imageUrls.length,
+              itemBuilder: (context, index) {
+                return Image.network(
+                  _product!.imageUrls[index],
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[200],
                       child: const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.image, size: 80, color: Colors.grey),
-                            SizedBox(height: 16),
-                            Text(
-                              'ไม่มีรูปภาพ',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-            ),
-
-            // Thumbnail scrollable section (if more than 1 image)
-            if (product.imageUrl.length > 1)
-              Container(
-                height: 80,
-                margin: const EdgeInsets.symmetric(vertical: 16),
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: product.imageUrl.length,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () {
-                        _pageController.animateToPage(
-                          index,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      },
-                      child: Container(
-                        width: 70,
-                        height: 70,
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: _currentImageIndex == index
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey[300]!,
-                            width: _currentImageIndex == index ? 2 : 1,
-                          ),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Image.network(
-                            product.imageUrl[index],
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey[300],
-                                child: const Icon(
-                                  Icons.image_not_supported,
-                                  size: 20,
-                                  color: Colors.grey,
-                                ),
-                              );
-                            },
-                          ),
+                        child: Icon(
+                          Icons.broken_image,
+                          size: 64,
+                          color: Colors.grey,
                         ),
                       ),
                     );
                   },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      color: Colors.grey[200],
+                      child: const Center(child: CircularProgressIndicator()),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+
+        // Image Indicators
+        if (_product!.imageUrls.length > 1) ...[
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              _product!.imageUrls.length,
+              (index) => Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _currentImageIndex == index
+                      ? Theme.of(context).primaryColor
+                      : Colors.grey[300],
                 ),
               ),
+            ),
+          ),
 
-            // Product Information Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Product Name
-                  Text(
-                    product.productName,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+          // Image Counter
+          const SizedBox(height: 8),
+          Text(
+            '${_currentImageIndex + 1} จาก ${_product!.imageUrls.length}',
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          ),
+        ],
+      ],
+    );
+  }
 
-                  // Status Badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: product.isActive ? Colors.green : Colors.grey,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      product.isActive ? 'เปิดใช้งาน' : 'ปิดใช้งาน',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+  Widget _buildProductInfo() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Product Name
+            Text(
+              _product!.skuName,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
 
-                  // Price Section
-                  Row(
-                    children: [
-                      if (product.discount > 0) ...[
-                        Text(
-                          '฿${product.price.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            decoration: TextDecoration.lineThrough,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          '฿${product.discountedPrice.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'ลด ${product.discount.toInt()}%',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ] else
-                        Text(
-                          '฿${product.price.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Product Specifications
-                  const Text(
-                    'ข้อมูลสินค้า',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-
-                  _buildSpecificationRow('ความกว้าง', '${product.width} ซม.'),
-                  _buildSpecificationRow('ความยาว', '${product.length} ซม.'),
-                  _buildSpecificationRow('น้ำหนัก', '${product.weight} กก.'),
-                  _buildSpecificationRow('ส่วนลด', '${product.discount}%'),
-                  _buildSpecificationRow(
-                    'จำนวนรูปภาพ',
-                    '${product.imageUrl.length} รูป',
-                  ),
-                ],
-              ),
+            // Product Key
+            Row(
+              children: [
+                Icon(Icons.qr_code, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 8),
+                Text(
+                  'รหัสสินค้า: ${_product!.skuKey}',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                ),
+              ],
             ),
           ],
         ),
@@ -327,30 +199,249 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  Widget _buildSpecificationRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+  Widget _buildSizeDetails() {
+    final hasSize =
+        _product!.width != null ||
+        _product!.length != null ||
+        _product!.height != null ||
+        _product!.weight != null;
+
+    if (!hasSize) {
+      return Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.straighten,
+                    size: 20,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'ขนาดและน้ำหนัก',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'ยังไม่มีข้อมูลขนาด',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.straighten,
+                  size: 20,
+                  color: Theme.of(context).primaryColor,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'ขนาดและน้ำหนัก',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              childAspectRatio: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              children: [
+                if (_product!.width != null)
+                  _buildSizeItem(
+                    'กว้าง',
+                    _product!.width!,
+                    'cm',
+                    Icons.width_normal,
+                  ),
+                if (_product!.length != null)
+                  _buildSizeItem('ยาว', _product!.length!, 'cm', Icons.height),
+                if (_product!.height != null)
+                  _buildSizeItem(
+                    'สูง',
+                    _product!.height!,
+                    'cm',
+                    Icons.vertical_align_top,
+                  ),
+                if (_product!.weight != null)
+                  _buildSizeItem(
+                    'น้ำหนัก',
+                    _product!.weight!,
+                    'g',
+                    Icons.monitor_weight,
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSizeItem(
+    String label,
+    double value,
+    String unit,
+    IconData icon,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
       child: Row(
         children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          const Text(': '),
+          Icon(icon, size: 16, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w500),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+                Text(
+                  '$value $unit',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLoadingWidget() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text('กำลังโหลดข้อมูลสินค้า...'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text(
+              'เกิดข้อผิดพลาด',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.red[700],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _errorMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadProductDetail,
+              child: const Text('ลองใหม่'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToEdit() {
+    if (_product != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UpdateProductPage(product: _product!),
+        ),
+      ).then((_) {
+        // Refresh detail when returning from edit page
+        _loadProductDetail();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('รายละเอียดสินค้า'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          if (_product != null)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: _navigateToEdit,
+            ),
+        ],
+      ),
+      body: _isLoading
+          ? _buildLoadingWidget()
+          : _hasError
+          ? _buildErrorWidget()
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildImageGallery(),
+                  const SizedBox(height: 16),
+                  _buildProductInfo(),
+                  const SizedBox(height: 16),
+                  _buildSizeDetails(),
+                ],
+              ),
+            ),
     );
   }
 }

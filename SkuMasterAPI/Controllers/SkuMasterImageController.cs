@@ -74,6 +74,22 @@ namespace SkuMasterAPI.Controllers
 
                 if (dto.NewImages?.Any() == true)
                 {
+                    // Check total image count after deletion but before adding new ones
+                    var currentImageCount = await _context.SkuMasterImages
+                        .CountAsync(img => img.MasterId == dto.SkuKey);
+
+                    var deletedCount = dto.DeleteImageIds?.Count ?? 0;
+                    var remainingImages = currentImageCount - deletedCount;
+                    var newImagesCount = dto.NewImages.Count;
+                    var totalAfterUpload = remainingImages + newImagesCount;
+
+                    if (totalAfterUpload > 7)
+                    {
+                        response.Success = false;
+                        response.Message = $"Total images would exceed limit. Current: {remainingImages}, Adding: {newImagesCount}, Limit: 7";
+                        return BadRequest(response);
+                    }
+
                     var imagesFolder = Path.Combine(_environment.WebRootPath ?? _environment.ContentRootPath, "images", "skumasters");
                     _fileService.EnsureDirectoryExists(imagesFolder);
 

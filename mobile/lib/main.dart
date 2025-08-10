@@ -15,12 +15,12 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        appBarTheme: const AppBarTheme(centerTitle: true, elevation: 2),
       ),
-      home: const ProductListPage(),
       debugShowCheckedModeBanner: false,
+      home: const ProductListPage(),
     );
   }
 }
-
 
 //remotedude Peeradon@1

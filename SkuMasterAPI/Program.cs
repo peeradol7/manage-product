@@ -24,6 +24,21 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
+// Ensure database is created
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<TFHDbContext>();
+    try
+    {
+        context.Database.EnsureCreated();
+        Console.WriteLine("Database ensured/created successfully");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database creation error: {ex.Message}");
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

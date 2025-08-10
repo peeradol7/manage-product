@@ -1,0 +1,86 @@
+### 1. Get SkuMaster list with pagination
+GET https://localhost:7071/api/SkuMaster/list?page=1&pageSize=20
+
+### 2. Get SkuMaster detail with name, images and size
+GET https://localhost:7071/api/SkuMaster/1/detail
+
+### 3. Update SkuMaster: Name, Images and Size
+POST https://localhost:7071/api/SkuMasterImage/update
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="skuKey"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="skuName"
+
+Updated Product Name
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="newImages"; filename="new-image.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/new-image.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="deleteImageIds"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="width"
+
+15.5
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="length"
+
+25.0
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="height"
+
+8.2
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="weight"
+
+3.1
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Update only name and size (no images)
+POST https://localhost:7071/api/SkuMasterImage/update
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="skuKey"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="skuName"
+
+New Product Name Only
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="width"
+
+12.0
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="length"
+
+22.0
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Update only images (no name/size)
+POST https://localhost:7071/api/SkuMasterImage/update
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="skuKey"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="newImages"; filename="image1.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/image1.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="newImages"; filename="image2.png"
+Content-Type: image/png
+
+< ./test-images/image2.png
+------WebKitFormBoundary7MA4YWxkTrZu0gW--

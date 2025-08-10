@@ -30,8 +30,12 @@ namespace SkuMasterAPI.Application.Services
             return newFileName;
         }
 
-        public async Task<List<string>> SaveFilesAsync(List<IFormFile> files, string folderPath)
+        public async Task<List<string>> SaveFilesAsync(List<IFormFile> files, string folderPath, int maxFileCount = 7)
         {
+            // Validate file count
+            if (files.Count > maxFileCount)
+                throw new ArgumentException($"Maximum {maxFileCount} files allowed. Received {files.Count} files.");
+
             var savedFiles = new List<string>();
 
             foreach (var file in files)

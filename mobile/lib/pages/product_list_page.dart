@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/product.dart';
-import '../services/product_service.dart';
+import '../models/sku_master.dart';
+import '../services/dio_service.dart';
 import 'product_detail_page.dart';
-import 'product_form_page.dart';
 
 class ProductListPage extends StatefulWidget {
   const ProductListPage({super.key});
@@ -12,96 +11,281 @@ class ProductListPage extends StatefulWidget {
 }
 
 class _ProductListPageState extends State<ProductListPage> {
-  final ProductService _productService = ProductService();
-  List<Product> _filteredProducts = [];
-  final TextEditingController _searchController = TextEditingController();
-  bool _showActiveOnly = false;
+  final ApiService _apiService = ApiService();
+  final ScrollController _scrollController = ScrollController();
+
+  List<SkuMasterList> _products = [];
+  int _currentPage = 1;
+  int _totalPages = 1;
+  bool _isLoading = false;
+  bool _hasError = false;
+  String _errorMessage = '';
+
+  // Pagination info
+  int _totalCount = 0;
+  bool _hasNextPage = false;
+  bool _hasPreviousPage = false;
 
   @override
   void initState() {
     super.initState();
-    _productService.initializeSampleData();
     _loadProducts();
-    _searchController.addListener(_filterProducts);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _loadProducts() {
-    setState(() {
-      _filterProducts();
-    });
-  }
-
-  void _filterProducts() {
-    setState(() {
-      List<Product> products = _showActiveOnly
-          ? _productService.getActiveProducts()
-          : _productService.getAllProducts();
-
-      if (_searchController.text.isNotEmpty) {
-        products = _productService.searchProducts(_searchController.text);
-        if (_showActiveOnly) {
-          products = products.where((p) => p.isActive).toList();
-        }
+  void _onScroll() {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      if (_hasNextPage && !_isLoading) {
+        _loadMore();
       }
-      _filteredProducts = products;
-    });
-  }
-
-  void _navigateToProductForm({Product? product}) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProductFormPage(product: product),
-      ),
-    );
-
-    if (result == true) {
-      _loadProducts();
     }
   }
 
-  void _navigateToProductDetail(Product product) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProductDetailPage(product: product),
+  Future<void> _loadProducts({bool refresh = false}) async {
+    if (refresh) {
+      setState(() {
+        _currentPage = 1;
+        _products.clear();
+        _hasError = false;
+        _errorMessage = '';
+      });
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await _apiService.getSkuMasterList(
+        page: _currentPage,
+        pageSize: 20,
+      );
+
+      setState(() {
+        if (refresh) {
+          _products = response.data;
+        } else {
+          _products.addAll(response.data);
+        }
+        _totalPages = response.totalPages;
+        _totalCount = response.totalCount;
+        _hasNextPage = response.hasNextPage;
+        _hasPreviousPage = response.hasPreviousPage;
+        _isLoading = false;
+        _hasError = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+        _errorMessage = e.toString();
+      });
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_hasNextPage && !_isLoading) {
+      _currentPage++;
+      await _loadProducts();
+    }
+  }
+
+  Future<void> _refreshProducts() async {
+    await _loadProducts(refresh: true);
+  }
+
+  Widget _buildProductCard(SkuMasterList product) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: () => _navigateToDetail(product.skuKey),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey[200],
+                ),
+                child: product.imageUrls.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          product.imageUrls.first,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.image_not_supported,
+                              size: 40,
+                              color: Colors.grey,
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            );
+                          },
+                        ),
+                      )
+                    : const Icon(
+                        Icons.image_not_supported,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
+              ),
+              const SizedBox(width: 12),
+
+              // Product Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product Name
+                    Text(
+                      product.skuName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+
+                    // Product Code
+                    Text(
+                      'รหัส: ${product.skuCode}',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 4),
+
+                    // Image Count
+                    Row(
+                      children: [
+                        Icon(Icons.image, size: 16, color: Colors.grey[600]),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${product.imageUrls.length} รูป',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const Spacer(),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: Colors.grey[400],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  void _deleteProduct(Product product) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('ยืนยันการลบ'),
-          content: Text('คุณต้องการลบสินค้า "${product.productName}" หรือไม่?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('ยกเลิก'),
+  Widget _buildLoadingIndicator() {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text(
+              'เกิดข้อผิดพลาด',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.red[700],
+              ),
             ),
-            TextButton(
-              onPressed: () {
-                _productService.deleteProduct(product.id);
-                _loadProducts();
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('ลบสินค้าเรียบร้อยแล้ว')),
-                );
-              },
-              child: const Text('ลบ', style: TextStyle(color: Colors.red)),
+            const SizedBox(height: 8),
+            Text(
+              _errorMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => _loadProducts(refresh: true),
+              child: const Text('ลองใหม่'),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
+  }
+
+  Widget _buildEmptyWidget() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'ไม่มีสินค้า',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'ยังไม่มีข้อมูลสินค้าในระบบ',
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToDetail(int skuKey) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductDetailPage(skuKey: skuKey),
+      ),
+    ).then((_) {
+      _refreshProducts();
+    });
   }
 
   @override
@@ -109,238 +293,47 @@ class _ProductListPageState extends State<ProductListPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('รายการสินค้า'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
         actions: [
           IconButton(
-            onPressed: () => _navigateToProductForm(),
-            icon: const Icon(Icons.add),
-            tooltip: 'เพิ่มสินค้าใหม่',
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshProducts,
           ),
         ],
       ),
       body: Column(
         children: [
-          // Search and Filter Section
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'ค้นหาสินค้า...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            onPressed: () {
-                              _searchController.clear();
-                            },
-                            icon: const Icon(Icons.clear),
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Checkbox(
-                      value: _showActiveOnly,
-                      onChanged: (value) {
-                        setState(() {
-                          _showActiveOnly = value ?? false;
-                          _filterProducts();
-                        });
-                      },
-                    ),
-                    const Text('แสดงเฉพาะสินค้าที่เปิดใช้งาน'),
-                  ],
-                ),
-              ],
+          // Status Bar
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.grey[100],
+            child: Text(
+              'ทั้งหมด $_totalCount รายการ | หน้า $_currentPage จาก $_totalPages',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ),
 
-          // Products List
+          // Content
           Expanded(
-            child: _filteredProducts.isEmpty
-                ? const Center(
-                    child: Text(
-                      'ไม่พบสินค้า',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
+            child: _hasError
+                ? _buildErrorWidget()
+                : _products.isEmpty && !_isLoading
+                ? _buildEmptyWidget()
+                : RefreshIndicator(
+                    onRefresh: _refreshProducts,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      itemCount: _products.length + (_isLoading ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == _products.length) {
+                          return _buildLoadingIndicator();
+                        }
+                        return _buildProductCard(_products[index]);
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _filteredProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = _filteredProducts[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        elevation: 2,
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(12),
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: product.imageUrl.isNotEmpty
-                                ? Image.network(
-                                    product.imageUrl.first,
-                                    width: 60,
-                                    height: 60,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: 60,
-                                        height: 60,
-                                        color: Colors.grey[300],
-                                        child: const Icon(
-                                          Icons.image_not_supported,
-                                        ),
-                                      );
-                                    },
-                                  )
-                                : Container(
-                                    width: 60,
-                                    height: 60,
-                                    color: Colors.grey[300],
-                                    child: const Icon(Icons.image),
-                                  ),
-                          ),
-                          title: Text(
-                            product.productName,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  if (product.discount > 0) ...[
-                                    Text(
-                                      '฿${product.price.toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        decoration: TextDecoration.lineThrough,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '฿${product.discountedPrice.toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        color: Colors.red,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        '-${product.discount.toInt()}%',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ),
-                                  ] else
-                                    Text(
-                                      '฿${product.price.toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: product.isActive
-                                          ? Colors.green
-                                          : Colors.grey,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      product.isActive
-                                          ? 'เปิดใช้งาน'
-                                          : 'ปิดใช้งาน',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${product.imageUrl.length} รูป',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          onTap: () => _navigateToProductDetail(product),
-                          trailing: PopupMenuButton<String>(
-                            onSelected: (value) {
-                              switch (value) {
-                                case 'edit':
-                                  _navigateToProductForm(product: product);
-                                  break;
-                                case 'delete':
-                                  _deleteProduct(product);
-                                  break;
-                              }
-                            },
-                            itemBuilder: (BuildContext context) => [
-                              const PopupMenuItem<String>(
-                                value: 'edit',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.edit, size: 20),
-                                    SizedBox(width: 8),
-                                    Text('แก้ไข'),
-                                  ],
-                                ),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'delete',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.delete,
-                                      size: 20,
-                                      color: Colors.red,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'ลบ',
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
                   ),
           ),
         ],
