@@ -10,6 +10,7 @@ namespace SkuMasterAPI.Models
 
         public DbSet<SkuMaster> SkuMasters { get; set; }
         public DbSet<SkuMasterImage> SkuMasterImages { get; set; }
+        public DbSet<SkuSizeDetail> SkuSizeDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -21,7 +22,7 @@ namespace SkuMasterAPI.Models
                 entity.HasKey(e => e.SkuKey);
                 entity.HasIndex(e => e.SkuCode).IsUnique();
                 entity.HasIndex(e => e.SkuBarcode);
-                
+
                 entity.Property(e => e.SkuCode)
                     .IsRequired()
                     .HasMaxLength(24);
@@ -101,7 +102,7 @@ namespace SkuMasterAPI.Models
             modelBuilder.Entity<SkuMasterImage>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                
+
                 entity.Property(e => e.ImageName)
                     .IsRequired()
                     .HasMaxLength(255);

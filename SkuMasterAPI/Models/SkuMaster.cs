@@ -46,8 +46,7 @@ namespace SkuMasterAPI.Models
         [Column("SKU_VAT_TY")]
         public short SkuVatTy { get; set; }
 
-        [Column("SKU_VAT")]
-        [Column(TypeName = "money")]
+        [Column("SKU_VAT", TypeName = "money")]
         public decimal SkuVat { get; set; }
 
         [Column("SKU_COST_TY")]
@@ -65,8 +64,7 @@ namespace SkuMasterAPI.Models
         [Column("SKU_WH_TY")]
         public short SkuWhTy { get; set; }
 
-        [Column("SKU_WH_RATE")]
-        [Column(TypeName = "money")]
+        [Column("SKU_WH_RATE", TypeName = "money")]
         public decimal SkuWhRate { get; set; }
 
         [Column("SKU_MSG_1")]
@@ -111,31 +109,24 @@ namespace SkuMasterAPI.Models
         public string SkuPEnable { get; set; } = string.Empty;
 
         [Column("SKU_MIN_QTY")]
-        [Column(TypeName = "money")]
         public decimal SkuMinQty { get; set; }
 
         [Column("SKU_MAX_QTY")]
-        [Column(TypeName = "money")]
         public decimal SkuMaxQty { get; set; }
 
         [Column("SKU_MIN_ORDER")]
-        [Column(TypeName = "money")]
         public decimal SkuMinOrder { get; set; }
 
         [Column("SKU_MAX_ORDER")]
-        [Column(TypeName = "money")]
         public decimal SkuMaxOrder { get; set; }
 
         [Column("SKU_LEAD_TIME")]
-        [Column(TypeName = "money")]
         public decimal SkuLeadTime { get; set; }
 
         [Column("SKU_SATISFY")]
-        [Column(TypeName = "money")]
         public decimal SkuSatisfy { get; set; }
 
         [Column("SKU_SAFTY")]
-        [Column(TypeName = "money")]
         public decimal SkuSafty { get; set; }
 
         [Column("SKU_FREQUENCY")]
@@ -148,27 +139,21 @@ namespace SkuMasterAPI.Models
         public int? SkuAbc { get; set; }
 
         [Column("SKU_EOQ_A")]
-        [Column(TypeName = "money")]
         public decimal SkuEoqA { get; set; }
 
         [Column("SKU_EOQ_P")]
-        [Column(TypeName = "money")]
         public decimal SkuEoqP { get; set; }
 
         [Column("SKU_EOQ_C")]
-        [Column(TypeName = "money")]
         public decimal SkuEoqC { get; set; }
 
         [Column("SKU_EOQ_NO")]
-        [Column(TypeName = "money")]
         public decimal SkuEoqNo { get; set; }
 
         [Column("SKU_SPEC")]
-        [StringLength(7000)]
         public string? SkuSpec { get; set; }
 
         [Column("SKU_USAGE")]
-        [StringLength(7000)]
         public string? SkuUsage { get; set; }
 
         [Column("SKU_REMARK")]
@@ -185,7 +170,6 @@ namespace SkuMasterAPI.Models
         public double SkuLastRcost { get; set; }
 
         [Column("SKU_LAST_RQTY")]
-        [Column(TypeName = "money")]
         public decimal SkuLastRqty { get; set; }
 
         [Column("SKU_LAST_COMMIT")]
@@ -222,34 +206,29 @@ namespace SkuMasterAPI.Models
         public string? SkuEqName { get; set; }
 
         [Column("SKU_UDF_1")]
-        [Column(TypeName = "money")]
         public decimal SkuUdf1 { get; set; }
 
         [Column("SKU_UDF_2")]
-        [Column(TypeName = "money")]
         public decimal SkuUdf2 { get; set; }
 
         [Column("SKU_UDF_3")]
-        [Column(TypeName = "money")]
         public decimal SkuUdf3 { get; set; }
 
         [Column("SKU_UDF_4")]
-        [Column(TypeName = "money")]
         public decimal SkuUdf4 { get; set; }
 
         [Column("SKU_UDF_5")]
-        [Column(TypeName = "money")]
         public decimal SkuUdf5 { get; set; }
 
         [Column("SKU_UDF_6")]
-        [Column(TypeName = "money")]
         public decimal SkuUdf6 { get; set; }
 
         [Column("SKU_LASTUPD")]
         [StringLength(17)]
         public string? SkuLastupd { get; set; }
 
-        // Navigation property for SkuMasterImage (1:n relationship)
+        // Navigation properties
         public virtual ICollection<SkuMasterImage> SkuMasterImages { get; set; } = new List<SkuMasterImage>();
+        public virtual ICollection<SkuSizeDetail> SkuSizeDetails { get; set; } = new List<SkuSizeDetail>();
     }
 }

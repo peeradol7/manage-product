@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Administrator\\SkuMasterAPI\\SkuMasterAPI.csproj": {}
+    "/Users/mac/Desktop/Project/manage-product/SkuMasterAPI/SkuMasterAPI.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Administrator\\SkuMasterAPI\\SkuMasterAPI.csproj": {
+    "/Users/mac/Desktop/Project/manage-product/SkuMasterAPI/SkuMasterAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Administrator\\SkuMasterAPI\\SkuMasterAPI.csproj",
+        "projectUniqueName": "/Users/mac/Desktop/Project/manage-product/SkuMasterAPI/SkuMasterAPI.csproj",
         "projectName": "SkuMasterAPI",
-        "projectPath": "C:\\Users\\Administrator\\SkuMasterAPI\\SkuMasterAPI.csproj",
-        "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Administrator\\SkuMasterAPI\\obj\\",
+        "projectPath": "/Users/mac/Desktop/Project/manage-product/SkuMasterAPI/SkuMasterAPI.csproj",
+        "packagesPath": "/Users/mac/.nuget/packages/",
+        "outputPath": "/Users/mac/Desktop/Project/manage-product/SkuMasterAPI/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/Users/mac/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -37,7 +37,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -46,6 +47,14 @@
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[8.0.19, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "target": "Package",
+              "version": "[8.0.0, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
@@ -71,7 +80,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Users\\Administrator\\AppData\\Local\\Microsoft\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
