@@ -41,7 +41,7 @@ namespace SkuMasterAPI.Application.Services
                 {
                     SkuKey = s.SkuKey,
                     SkuCode = s.SkuCode,
-                    SkuName = s.SkuDiscontinued ? $"(เลิกขาย) {s.SkuName}" : s.SkuName,
+                    SkuName = s.SkuName,
                     ImageUrls = s.SkuMasterImages.Select(img => img.ImageName).ToList(),
                     SkuPrice = s.SkuPrice
                 })
@@ -102,11 +102,6 @@ namespace SkuMasterAPI.Application.Services
             if (dto.SkuPrice.HasValue)
             {
                 sku.SkuPrice = dto.SkuPrice.Value;
-            }
-
-            if (dto.IsDiscontinued.HasValue)
-            {
-                sku.SkuDiscontinued = dto.IsDiscontinued.Value;
             }
 
             await _context.SaveChangesAsync();

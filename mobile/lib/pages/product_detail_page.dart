@@ -411,9 +411,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   void _showEditBasicInfoDialog() {
     if (_product == null) return;
 
-    final nameController = TextEditingController(text: _product!.skuName);
+    // Extract original name without discontinued prefix
+    String originalName = _product!.skuName;
+    bool isDiscontinued = originalName.startsWith('(เลิกขาย)');
+    if (isDiscontinued) {
+      originalName = originalName.replaceFirst('(เลิกขาย)', '').trim();
+    }
+
+    final nameController = TextEditingController(text: originalName);
     final priceController = TextEditingController();
-    bool isDiscontinued = _product!.skuName.startsWith('(เลิกขาย)');
 
     showDialog(
       context: context,
@@ -423,6 +429,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextField(
                   controller: nameController,
@@ -430,6 +437,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     labelText: 'ชื่อสินค้า',
                     border: OutlineInputBorder(),
                   ),
+                  maxLines: 2,
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -441,9 +449,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                CheckboxListTile(
+                const Text(
+                  'สถานะสินค้า:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                RadioListTile<bool>(
+                  title: const Text('จำหน่าย'),
+                  value: false,
+                  groupValue: isDiscontinued,
+                  onChanged: (value) {
+                    setDialogState(() {
+                      isDiscontinued = value ?? false;
+                    });
+                  },
+                ),
+                RadioListTile<bool>(
                   title: const Text('เลิกขาย'),
-                  value: isDiscontinued,
+                  value: true,
+                  groupValue: isDiscontinued,
                   onChanged: (value) {
                     setDialogState(() {
                       isDiscontinued = value ?? false;
@@ -459,11 +483,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               child: const Text('ยกเลิก'),
             ),
             ElevatedButton(
-              onPressed: () => _updateBasicInfo(
-                nameController.text,
-                priceController.text,
-                isDiscontinued,
-              ),
+              onPressed: () {
+                // Build final name based on discontinued status
+                String finalName = nameController.text.trim();
+                if (isDiscontinued && !finalName.startsWith('(เลิกขาย)')) {
+                  finalName = '(เลิกขาย) $finalName';
+                }
+
+                _updateBasicInfo(finalName, priceController.text);
+              },
               child: const Text('บันทึก'),
             ),
           ],
@@ -472,8 +500,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  Future<void> _updateBasicInfo(
-      String name, String priceStr, bool isDiscontinued) async {
+  Future<void> _updateBasicInfo(String name, String priceStr) async {
     try {
       int? price;
       if (priceStr.isNotEmpty) {
@@ -487,7 +514,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       final request = UpdateSkuMasterBasicRequest(
         skuName: name.isNotEmpty ? name : null,
         skuPrice: price,
-        isDiscontinued: isDiscontinued,
       );
 
       final success = await _apiService.updateSkuMasterBasic(

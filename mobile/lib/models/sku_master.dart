@@ -194,19 +194,16 @@ class UpdateSkuMasterResponse {
 class UpdateSkuMasterBasicRequest {
   final String? skuName;
   final int? skuPrice;
-  final bool? isDiscontinued;
 
   UpdateSkuMasterBasicRequest({
     this.skuName,
     this.skuPrice,
-    this.isDiscontinued,
   });
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
     if (skuName != null) data['skuName'] = skuName;
     if (skuPrice != null) data['skuPrice'] = skuPrice;
-    if (isDiscontinued != null) data['isDiscontinued'] = isDiscontinued;
     return data;
   }
 }
