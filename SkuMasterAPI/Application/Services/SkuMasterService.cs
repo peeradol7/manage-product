@@ -21,6 +21,17 @@ namespace SkuMasterAPI.Application.Services
                 .Include(s => s.SkuMasterImages)
                 .AsQueryable();
 
+            if (!string.IsNullOrEmpty(request.SearchTerm))
+            {
+                query = query.Where(s => s.SkuCode.Contains(request.SearchTerm) || 
+                                       s.SkuName.Contains(request.SearchTerm));
+            }
+
+            if (request.FilterNoImages)
+            {
+                query = query.Where(s => !s.SkuMasterImages.Any());
+            }
+
             var totalCount = await query.CountAsync();
 
             var items = await query
@@ -30,12 +41,12 @@ namespace SkuMasterAPI.Application.Services
                 {
                     SkuKey = s.SkuKey,
                     SkuCode = s.SkuCode,
-                    SkuName = s.SkuName,
-                    ImageUrls = s.SkuMasterImages.Select(img => img.ImageName).ToList()
+                    SkuName = s.SkuDiscontinued ? $"(เลิกขาย) {s.SkuName}" : s.SkuName,
+                    ImageUrls = s.SkuMasterImages.Select(img => img.ImageName).ToList(),
+                    SkuPrice = s.SkuPrice
                 })
                 .ToListAsync();
 
-            // Convert image paths to full URLs
             foreach (var item in items)
             {
                 item.ImageUrls = _urlHelperService.GetImageUrls(item.ImageUrls);
@@ -76,6 +87,30 @@ namespace SkuMasterAPI.Application.Services
                 Height = sizeDetail?.Height,
                 Weight = sizeDetail?.Weight
             };
+        }
+
+        public async Task<bool> UpdateBasicInfoAsync(int key, UpdateSkuMasterBasicDto dto)
+        {
+            var sku = await _context.SkuMasters.FindAsync(key);
+            if (sku == null) return false;
+
+            if (!string.IsNullOrEmpty(dto.SkuName))
+            {
+                sku.SkuName = dto.SkuName;
+            }
+
+            if (dto.SkuPrice.HasValue)
+            {
+                sku.SkuPrice = dto.SkuPrice.Value;
+            }
+
+            if (dto.IsDiscontinued.HasValue)
+            {
+                sku.SkuDiscontinued = dto.IsDiscontinued.Value;
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

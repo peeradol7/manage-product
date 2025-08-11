@@ -3,12 +3,14 @@ class SkuMasterList {
   final String skuCode;
   final String skuName;
   final List<String> imageUrls;
+  final int? skuPrice;
 
   SkuMasterList({
     required this.skuKey,
     required this.skuCode,
     required this.skuName,
     required this.imageUrls,
+    this.skuPrice,
   });
 
   factory SkuMasterList.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class SkuMasterList {
       skuCode: json['skuCode'] ?? '',
       skuName: json['skuName'] ?? '',
       imageUrls: List<String>.from(json['imageUrls'] ?? []),
+      skuPrice: json['skuPrice'],
     );
   }
 
@@ -26,8 +29,12 @@ class SkuMasterList {
       'skuCode': skuCode,
       'skuName': skuName,
       'imageUrls': imageUrls,
+      'skuPrice': skuPrice,
     };
   }
+
+  // Helper method to check if discontinued
+  bool get isDiscontinued => skuName.startsWith('(เลิกขาย)');
 }
 
 class SkuMasterDetail {
@@ -181,5 +188,25 @@ class UpdateSkuMasterResponse {
       updatedSizeDetails: json['updatedSizeDetails'],
       warnings: List<String>.from(json['warnings'] ?? []),
     );
+  }
+}
+
+class UpdateSkuMasterBasicRequest {
+  final String? skuName;
+  final int? skuPrice;
+  final bool? isDiscontinued;
+
+  UpdateSkuMasterBasicRequest({
+    this.skuName,
+    this.skuPrice,
+    this.isDiscontinued,
+  });
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {};
+    if (skuName != null) data['skuName'] = skuName;
+    if (skuPrice != null) data['skuPrice'] = skuPrice;
+    if (isDiscontinued != null) data['isDiscontinued'] = isDiscontinued;
+    return data;
   }
 }

@@ -6,5 +6,6 @@ namespace SkuMasterAPI.Application.Services
     {
         Task<PaginationResponse<SimpleSkuMasterListDto>> GetPagedListAsync(PaginationRequest request);
         Task<SimpleSkuMasterDetailDto?> GetDetailByKeyAsync(int key);
+        Task<bool> UpdateBasicInfoAsync(int key, UpdateSkuMasterBasicDto dto);
     }
 }

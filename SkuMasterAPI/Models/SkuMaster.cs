@@ -227,8 +227,8 @@ namespace SkuMasterAPI.Models
         [StringLength(17)]
         public string? SkuLastupd { get; set; }
 
+
         // Navigation properties
         public virtual ICollection<SkuMasterImage> SkuMasterImages { get; set; } = new List<SkuMasterImage>();
         public virtual ICollection<SkuSizeDetail> SkuSizeDetails { get; set; } = new List<SkuSizeDetail>();
     }
-}

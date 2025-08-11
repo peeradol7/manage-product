@@ -1,5 +1,7 @@
-import 'package:dio/dio.dart';
 import 'dart:io';
+
+import 'package:dio/dio.dart';
+
 import '../models/sku_master.dart';
 
 class ApiService {
@@ -33,11 +35,26 @@ class ApiService {
   Future<PaginationResponse<SkuMasterList>> getSkuMasterList({
     int page = 1,
     int pageSize = 20,
+    String? searchTerm,
+    bool filterNoImages = false,
   }) async {
     try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'pageSize': pageSize,
+      };
+
+      if (searchTerm != null && searchTerm.isNotEmpty) {
+        queryParams['searchTerm'] = searchTerm;
+      }
+
+      if (filterNoImages) {
+        queryParams['filterNoImages'] = filterNoImages;
+      }
+
       final response = await _dio.get(
         '/SkuMaster/list',
-        queryParameters: {'page': page, 'pageSize': pageSize},
+        queryParameters: queryParams,
       );
 
       if (response.statusCode == 200) {
@@ -164,6 +181,28 @@ class ApiService {
         return Exception('Unknown error: ${e.message}');
       default:
         return Exception('Network error: ${e.message}');
+    }
+  }
+
+  // 4. Update SkuMaster Basic Info (Name, Price, Discontinued status)
+  Future<bool> updateSkuMasterBasic({
+    required int skuKey,
+    required UpdateSkuMasterBasicRequest request,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/SkuMaster/$skuKey/update-basic',
+        data: request.toJson(),
+        options: Options(headers: {'Content-Type': 'application/json'}),
+      );
+
+      return response.statusCode == 200;
+    } on DioException catch (e) {
+      print('DioException in updateSkuMasterBasic: ${e.message}');
+      throw _handleDioException(e);
+    } catch (e) {
+      print('Unexpected error in updateSkuMasterBasic: $e');
+      throw Exception('Unexpected error: $e');
     }
   }
 

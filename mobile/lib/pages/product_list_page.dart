@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import '../models/sku_master.dart';
 import '../services/dio_service.dart';
 import 'product_detail_page.dart';
@@ -13,6 +16,7 @@ class ProductListPage extends StatefulWidget {
 class _ProductListPageState extends State<ProductListPage> {
   final ApiService _apiService = ApiService();
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
 
   List<SkuMasterList> _products = [];
   int _currentPage = 1;
@@ -20,6 +24,10 @@ class _ProductListPageState extends State<ProductListPage> {
   bool _isLoading = false;
   bool _hasError = false;
   String _errorMessage = '';
+
+  // Search and filter
+  String _searchTerm = '';
+  bool _filterNoImages = false;
 
   // Pagination info
   int _totalCount = 0;
@@ -37,6 +45,7 @@ class _ProductListPageState extends State<ProductListPage> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -67,6 +76,8 @@ class _ProductListPageState extends State<ProductListPage> {
       final response = await _apiService.getSkuMasterList(
         page: _currentPage,
         pageSize: 20,
+        searchTerm: _searchTerm.isNotEmpty ? _searchTerm : null,
+        filterNoImages: _filterNoImages,
       );
 
       setState(() {
@@ -100,6 +111,36 @@ class _ProductListPageState extends State<ProductListPage> {
 
   Future<void> _refreshProducts() async {
     await _loadProducts(refresh: true);
+  }
+
+  void _onSearchChanged(String value) {
+    setState(() {
+      _searchTerm = value;
+    });
+    _debounceSearch();
+  }
+
+  Timer? _debounceTimer;
+  void _debounceSearch() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _loadProducts(refresh: true);
+    });
+  }
+
+  void _toggleFilterNoImages() {
+    setState(() {
+      _filterNoImages = !_filterNoImages;
+    });
+    _loadProducts(refresh: true);
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() {
+      _searchTerm = '';
+    });
+    _loadProducts(refresh: true);
   }
 
   Widget _buildProductCard(SkuMasterList product) {
@@ -176,7 +217,19 @@ class _ProductListPageState extends State<ProductListPage> {
                     ),
                     const SizedBox(height: 4),
 
-                    // Image Count
+                    // Price
+                    if (product.skuPrice != null)
+                      Text(
+                        'ราคา: ${product.skuPrice} บาท',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.green,
+                        ),
+                      ),
+                    const SizedBox(height: 4),
+
+                    // Image Count and Status
                     Row(
                       children: [
                         Icon(Icons.image, size: 16, color: Colors.grey[600]),
@@ -188,6 +241,25 @@ class _ProductListPageState extends State<ProductListPage> {
                             color: Colors.grey[600],
                           ),
                         ),
+                        if (product.isDiscontinued) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade100,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'เลิกขาย',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                         const Spacer(),
                         Icon(
                           Icons.arrow_forward_ios,
@@ -298,6 +370,14 @@ class _ProductListPageState extends State<ProductListPage> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: Icon(
+              _filterNoImages ? Icons.filter_alt : Icons.filter_alt_outlined,
+              color: _filterNoImages ? Colors.yellow : Colors.white,
+            ),
+            onPressed: _toggleFilterNoImages,
+            tooltip: 'ฟิลเตอร์สินค้าที่ไม่มีรูป',
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _refreshProducts,
           ),
@@ -305,14 +385,61 @@ class _ProductListPageState extends State<ProductListPage> {
       ),
       body: Column(
         children: [
+          // Search Bar
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'ค้นหาสินค้าจาก โค้ด และ ชื่อ',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchTerm.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: _clearSearch,
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+            ),
+          ),
+
           // Status Bar
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             color: Colors.grey[100],
-            child: Text(
-              'ทั้งหมด $_totalCount รายการ | หน้า $_currentPage จาก $_totalPages',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            child: Row(
+              children: [
+                Text(
+                  'ทั้งหมด $_totalCount รายการ | หน้า $_currentPage จาก $_totalPages',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+                if (_filterNoImages) ...[
+                  const Spacer(),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'ไม่มีรูป',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
 
@@ -321,20 +448,20 @@ class _ProductListPageState extends State<ProductListPage> {
             child: _hasError
                 ? _buildErrorWidget()
                 : _products.isEmpty && !_isLoading
-                ? _buildEmptyWidget()
-                : RefreshIndicator(
-                    onRefresh: _refreshProducts,
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      itemCount: _products.length + (_isLoading ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == _products.length) {
-                          return _buildLoadingIndicator();
-                        }
-                        return _buildProductCard(_products[index]);
-                      },
-                    ),
-                  ),
+                    ? _buildEmptyWidget()
+                    : RefreshIndicator(
+                        onRefresh: _refreshProducts,
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          itemCount: _products.length + (_isLoading ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == _products.length) {
+                              return _buildLoadingIndicator();
+                            }
+                            return _buildProductCard(_products[index]);
+                          },
+                        ),
+                      ),
           ),
         ],
       ),

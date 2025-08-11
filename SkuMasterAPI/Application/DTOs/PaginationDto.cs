@@ -4,6 +4,8 @@ namespace SkuMasterAPI.Application.DTOs
     {
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 20;
+        public string? SearchTerm { get; set; }
+        public bool FilterNoImages { get; set; } = false;
 
         public int GetSkip() => (Page - 1) * PageSize;
         public int GetTake() => PageSize;

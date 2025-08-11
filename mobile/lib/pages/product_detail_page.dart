@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/sku_master.dart';
 import '../services/dio_service.dart';
 import 'update_product_page.dart';
@@ -200,8 +201,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _buildSizeDetails() {
-    final hasSize =
-        _product!.width != null ||
+    final hasSize = _product!.width != null ||
         _product!.length != null ||
         _product!.height != null ||
         _product!.weight != null;
@@ -267,7 +267,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ],
             ),
             const SizedBox(height: 16),
-
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -409,6 +408,123 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
   }
 
+  void _showEditBasicInfoDialog() {
+    if (_product == null) return;
+
+    final nameController = TextEditingController(text: _product!.skuName);
+    final priceController = TextEditingController();
+    bool isDiscontinued = _product!.skuName.startsWith('(เลิกขาย)');
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('แก้ไขข้อมูลพื้นฐาน'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'ชื่อสินค้า',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: priceController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'ราคา (บาท)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  title: const Text('เลิกขาย'),
+                  value: isDiscontinued,
+                  onChanged: (value) {
+                    setDialogState(() {
+                      isDiscontinued = value ?? false;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('ยกเลิก'),
+            ),
+            ElevatedButton(
+              onPressed: () => _updateBasicInfo(
+                nameController.text,
+                priceController.text,
+                isDiscontinued,
+              ),
+              child: const Text('บันทึก'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _updateBasicInfo(
+      String name, String priceStr, bool isDiscontinued) async {
+    try {
+      int? price;
+      if (priceStr.isNotEmpty) {
+        price = int.tryParse(priceStr);
+        if (price == null) {
+          _showErrorSnackBar('กรุณาใส่ราคาเป็นตัวเลข');
+          return;
+        }
+      }
+
+      final request = UpdateSkuMasterBasicRequest(
+        skuName: name.isNotEmpty ? name : null,
+        skuPrice: price,
+        isDiscontinued: isDiscontinued,
+      );
+
+      final success = await _apiService.updateSkuMasterBasic(
+        skuKey: widget.skuKey,
+        request: request,
+      );
+
+      if (success) {
+        Navigator.of(context).pop(); // Close dialog
+        _showSuccessSnackBar('อัปเดตข้อมูลสำเร็จ');
+        _loadProductDetail(); // Refresh data
+      } else {
+        _showErrorSnackBar('เกิดข้อผิดพลาดในการอัปเดต');
+      }
+    } catch (e) {
+      _showErrorSnackBar('เกิดข้อผิดพลาด: ${e.toString()}');
+    }
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -418,30 +534,37 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          if (_product != null)
+          if (_product != null) ...[
+            IconButton(
+              icon: const Icon(Icons.edit_note),
+              onPressed: _showEditBasicInfoDialog,
+              tooltip: 'แก้ไขข้อมูลพื้นฐาน',
+            ),
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: _navigateToEdit,
+              tooltip: 'แก้ไขรูปภาพและขนาด',
             ),
+          ],
         ],
       ),
       body: _isLoading
           ? _buildLoadingWidget()
           : _hasError
-          ? _buildErrorWidget()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildImageGallery(),
-                  const SizedBox(height: 16),
-                  _buildProductInfo(),
-                  const SizedBox(height: 16),
-                  _buildSizeDetails(),
-                ],
-              ),
-            ),
+              ? _buildErrorWidget()
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildImageGallery(),
+                      const SizedBox(height: 16),
+                      _buildProductInfo(),
+                      const SizedBox(height: 16),
+                      _buildSizeDetails(),
+                    ],
+                  ),
+                ),
     );
   }
 }

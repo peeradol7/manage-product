@@ -21,9 +21,17 @@ namespace SkuMasterAPI.Controllers
         [HttpGet("list")]
         public async Task<ActionResult<PaginationResponse<SimpleSkuMasterListDto>>> GetPagedSkuMasters(
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20)
+            [FromQuery] int pageSize = 20,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] bool filterNoImages = false)
         {
-            var request = new PaginationRequest { Page = page, PageSize = pageSize };
+            var request = new PaginationRequest 
+            { 
+                Page = page, 
+                PageSize = pageSize,
+                SearchTerm = searchTerm,
+                FilterNoImages = filterNoImages
+            };
             var result = await _skuMasterService.GetPagedListAsync(request);
             return Ok(result);
         }
@@ -42,6 +50,20 @@ namespace SkuMasterAPI.Controllers
             }
 
             return Ok(sku);
+        }
+
+        /// <summary>
+        /// Update SkuMaster basic info (Name, Price, Discontinued status)
+        /// </summary>
+        [HttpPut("{key}/update-basic")]
+        public async Task<ActionResult> UpdateSkuMasterBasic(int key, [FromBody] UpdateSkuMasterBasicDto dto)
+        {
+            var result = await _skuMasterService.UpdateBasicInfoAsync(key, dto);
+            if (!result)
+            {
+                return NotFound();
+            }
+            return Ok(new { message = "Updated successfully" });
         }
     }
 }
