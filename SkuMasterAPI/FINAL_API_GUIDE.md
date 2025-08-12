@@ -72,7 +72,8 @@ Content-Type: multipart/form-data
 | `skuKey` | integer | Yes | SkuMaster Key ID |
 | `skuName` | string | No | Product name |
 | `newImages` | IFormFile[] | No | New images to upload |
-| `deleteImageIds` | int[] | No | Image IDs to delete |
+| `deleteImageIds` | int[] | No | Image IDs to delete (deprecated) |
+| `deleteImageFileNames` | string[] | No | Image file names to delete (preferred) |
 | `width` | decimal | No | Product width |
 | `length` | decimal | No | Product length |
 | `height` | decimal | No | Product height |
@@ -86,8 +87,8 @@ curl -X POST "https://localhost:7071/api/SkuMasterImage/update" \
   -F "skuName=Updated Product Name" \
   -F "newImages=@image1.jpg" \
   -F "newImages=@image2.png" \
-  -F "deleteImageIds=1" \
-  -F "deleteImageIds=2" \
+  -F "deleteImageFileNames=abc123.jpg" \
+  -F "deleteImageFileNames=def456.png" \
   -F "width=15.5" \
   -F "length=25.0" \
   -F "height=8.2" \
@@ -110,7 +111,8 @@ curl -X POST "https://localhost:7071/api/SkuMasterImage/update" \
       "createdDate": "2024-01-15T10:30:00"
     }
   ],
-  "deletedImageIds": [1, 2],
+  "deletedImageIds": [1, 2], // Deprecated
+  "deletedImageFileNames": ["abc123.jpg", "def456.png"], // New preferred
   "updatedSizeDetail": {
     "id": 1,
     "masterId": 1,
@@ -237,4 +239,3 @@ This streamlined API design focuses on the three most essential operations:
 - **Modify** any aspect of a product in one call
 
 Perfect for mobile apps, admin interfaces, and any system that needs straightforward product management.
-

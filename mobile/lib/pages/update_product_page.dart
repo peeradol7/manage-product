@@ -28,7 +28,8 @@ class _UpdateProductPageState extends State<UpdateProductPage> {
   // State
   bool _isLoading = false;
   List<File> _newImages = [];
-  List<int> _deletedImageIds = [];
+  List<String> _deletedImageFileNames =
+      []; // Changed to use fileName instead of ID
   List<String> _currentImageUrls = [];
 
   // Image Picker
@@ -119,12 +120,13 @@ class _UpdateProductPageState extends State<UpdateProductPage> {
   }
 
   void _removeCurrentImage(int index) {
-    // Since we don't have image IDs, we'll simulate by removing from display
-    // In a real app, you'd need to track image IDs from the API
     setState(() {
+      final imageUrl = _currentImageUrls[index];
+      // Extract fileName from URL (e.g., from "/images/skumasters/abc123.jpg" get "abc123.jpg")
+      final fileName = imageUrl.split('/').last;
+
       _currentImageUrls.removeAt(index);
-      // Add a dummy ID for deletion (you'd need real image IDs from API)
-      _deletedImageIds.add(index + 1); // This is just for demo
+      _deletedImageFileNames.add(fileName);
     });
   }
 
@@ -513,7 +515,9 @@ class _UpdateProductPageState extends State<UpdateProductPage> {
         skuName: _nameController.text.trim().isNotEmpty
             ? _nameController.text.trim()
             : null,
-        deleteImageIds: _deletedImageIds.isNotEmpty ? _deletedImageIds : null,
+        deleteImageFileNames: _deletedImageFileNames.isNotEmpty
+            ? _deletedImageFileNames
+            : null,
         width: _widthController.text.isNotEmpty
             ? double.tryParse(_widthController.text)
             : null,

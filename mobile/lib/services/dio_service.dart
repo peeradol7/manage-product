@@ -1,26 +1,47 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 
 import '../models/sku_master.dart';
 
 class ApiService {
   late Dio _dio;
-  static const String baseUrl = 'http://10.210.160.210:5900/api';
+  static const String baseUrl = 'https://3f62d0f18ca2.ngrok-free.app/api';
   ApiService() {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 30),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true', // Skip ngrok browser warning
+        },
+        validateStatus: (status) {
+          return status! < 500; // Accept any status code below 500
         },
       ),
     );
 
-    // Add logging interceptor for debugging
+    // Configure HTTP client for SSL
+    (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+        (HttpClient client) {
+          client.badCertificateCallback =
+              (X509Certificate cert, String host, int port) {
+                // Allow certificates for ngrok domains
+                if (host.contains('ngrok-free.app') ||
+                    host.contains('ngrok.io') ||
+                    host.contains('ngrok.app')) {
+                  return true;
+                }
+                return false;
+              };
+          return client;
+        };
+
     _dio.interceptors.add(
       LogInterceptor(
         requestBody: true,
@@ -31,7 +52,6 @@ class ApiService {
     );
   }
 
-  // 1. Get SkuMaster List with Pagination
   Future<PaginationResponse<SkuMasterList>> getSkuMasterList({
     int page = 1,
     int pageSize = 20,
@@ -39,10 +59,7 @@ class ApiService {
     bool filterNoImages = false,
   }) async {
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'pageSize': pageSize,
-      };
+      final queryParams = <String, dynamic>{'page': page, 'pageSize': pageSize};
 
       if (searchTerm != null && searchTerm.isNotEmpty) {
         queryParams['searchTerm'] = searchTerm;
@@ -78,7 +95,6 @@ class ApiService {
     }
   }
 
-  // 2. Get SkuMaster Detail
   Future<SkuMasterDetail> getSkuMasterDetail(int skuKey) async {
     try {
       final response = await _dio.get('/SkuMaster/$skuKey/detail');

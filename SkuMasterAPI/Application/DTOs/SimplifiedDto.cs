@@ -31,8 +31,11 @@ namespace SkuMasterAPI.Application.DTOs
 
         public List<IFormFile>? NewImages { get; set; } = new List<IFormFile>();
 
-        // Image IDs to delete
+        // Image IDs to delete (deprecated - use DeleteImageFileNames instead)
         public List<int>? DeleteImageIds { get; set; } = new List<int>();
+
+        // Image file names to delete (new preferred method)
+        public List<string>? DeleteImageFileNames { get; set; } = new List<string>();
 
         public decimal? Width { get; set; }
         public decimal? Length { get; set; }
@@ -51,6 +54,7 @@ namespace SkuMasterAPI.Application.DTOs
         // Upload results
         public List<SkuMasterImageDto> UploadedImages { get; set; } = new List<SkuMasterImageDto>();
         public List<int> DeletedImageIds { get; set; } = new List<int>();
+        public List<string> DeletedImageFileNames { get; set; } = new List<string>();
 
         // Size update result
         public SkuSizeDetailDto? UpdatedSizeDetail { get; set; }

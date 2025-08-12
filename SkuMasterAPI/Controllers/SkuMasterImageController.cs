@@ -48,6 +48,33 @@ namespace SkuMasterAPI.Controllers
                     skuMaster.SkuName = dto.SkuName;
                 }
 
+                // Handle deletion by fileName (preferred method)
+                if (dto.DeleteImageFileNames?.Any() == true)
+                {
+                    foreach (var fileName in dto.DeleteImageFileNames)
+                    {
+                        var imageToDelete = await _context.SkuMasterImages
+                            .FirstOrDefaultAsync(img => img.MasterId == dto.SkuKey && img.ImageName.Contains(fileName));
+
+                        if (imageToDelete != null)
+                        {
+                            // Delete physical file
+                            var imagePath = Path.Combine(_environment.WebRootPath ?? _environment.ContentRootPath, "images", "skumasters");
+                            var fullPath = Path.Combine(imagePath, fileName);
+                            await _fileService.DeleteFileAsync(fullPath);
+
+                            // Delete from database
+                            _context.SkuMasterImages.Remove(imageToDelete);
+                            response.DeletedImageFileNames.Add(fileName);
+                        }
+                        else
+                        {
+                            response.Warnings.Add($"Image with fileName '{fileName}' not found or doesn't belong to this SkuMaster");
+                        }
+                    }
+                }
+
+                // Handle deletion by ID (backward compatibility)
                 if (dto.DeleteImageIds?.Any() == true)
                 {
                     foreach (var imageId in dto.DeleteImageIds)
@@ -78,7 +105,7 @@ namespace SkuMasterAPI.Controllers
                     var currentImageCount = await _context.SkuMasterImages
                         .CountAsync(img => img.MasterId == dto.SkuKey);
 
-                    var deletedCount = dto.DeleteImageIds?.Count ?? 0;
+                    var deletedCount = (dto.DeleteImageIds?.Count ?? 0) + (dto.DeleteImageFileNames?.Count ?? 0);
                     var remainingImages = currentImageCount - deletedCount;
                     var newImagesCount = dto.NewImages.Count;
                     var totalAfterUpload = remainingImages + newImagesCount;

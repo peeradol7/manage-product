@@ -22,9 +22,9 @@ Content-Type: image/jpeg
 
 < ./test-images/new-image.jpg
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="deleteImageIds"
+Content-Disposition: form-data; name="deleteImageFileNames"
 
-1
+abc123.jpg
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="width"
 

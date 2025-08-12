@@ -25,11 +25,9 @@ class _ProductListPageState extends State<ProductListPage> {
   bool _hasError = false;
   String _errorMessage = '';
 
-  // Search and filter
   String _searchTerm = '';
   bool _filterNoImages = false;
 
-  // Pagination info
   int _totalCount = 0;
   bool _hasNextPage = false;
   bool _hasPreviousPage = false;
@@ -245,7 +243,9 @@ class _ProductListPageState extends State<ProductListPage> {
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.red.shade100,
                               borderRadius: BorderRadius.circular(4),
@@ -403,8 +403,10 @@ class _ProductListPageState extends State<ProductListPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
             ),
           ),
@@ -423,8 +425,10 @@ class _ProductListPageState extends State<ProductListPage> {
                 if (_filterNoImages) ...[
                   const Spacer(),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.orange.shade100,
                       borderRadius: BorderRadius.circular(12),
@@ -448,20 +452,20 @@ class _ProductListPageState extends State<ProductListPage> {
             child: _hasError
                 ? _buildErrorWidget()
                 : _products.isEmpty && !_isLoading
-                    ? _buildEmptyWidget()
-                    : RefreshIndicator(
-                        onRefresh: _refreshProducts,
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          itemCount: _products.length + (_isLoading ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index == _products.length) {
-                              return _buildLoadingIndicator();
-                            }
-                            return _buildProductCard(_products[index]);
-                          },
-                        ),
-                      ),
+                ? _buildEmptyWidget()
+                : RefreshIndicator(
+                    onRefresh: _refreshProducts,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      itemCount: _products.length + (_isLoading ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == _products.length) {
+                          return _buildLoadingIndicator();
+                        }
+                        return _buildProductCard(_products[index]);
+                      },
+                    ),
+                  ),
           ),
         ],
       ),

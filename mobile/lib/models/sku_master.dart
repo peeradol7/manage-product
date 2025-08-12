@@ -121,7 +121,9 @@ class PaginationResponse<T> {
 class UpdateSkuMasterRequest {
   final int skuKey;
   final String? skuName;
-  final List<int>? deleteImageIds;
+  final List<int>?
+  deleteImageIds; // Deprecated - use deleteImageFileNames instead
+  final List<String>? deleteImageFileNames; // New preferred method
   final double? width;
   final double? length;
   final double? height;
@@ -130,7 +132,8 @@ class UpdateSkuMasterRequest {
   UpdateSkuMasterRequest({
     required this.skuKey,
     this.skuName,
-    this.deleteImageIds,
+    this.deleteImageIds, // Keep for backward compatibility
+    this.deleteImageFileNames, // New preferred parameter
     this.width,
     this.length,
     this.height,
@@ -144,6 +147,14 @@ class UpdateSkuMasterRequest {
       data['SkuName'] = skuName!;
     }
 
+    // Use fileName-based deletion (preferred)
+    if (deleteImageFileNames != null && deleteImageFileNames!.isNotEmpty) {
+      for (int i = 0; i < deleteImageFileNames!.length; i++) {
+        data['DeleteImageFileNames[$i]'] = deleteImageFileNames![i];
+      }
+    }
+
+    // Backward compatibility for ID-based deletion
     if (deleteImageIds != null && deleteImageIds!.isNotEmpty) {
       for (int i = 0; i < deleteImageIds!.length; i++) {
         data['DeleteImageIds[$i]'] = deleteImageIds![i].toString();
@@ -164,7 +175,8 @@ class UpdateSkuMasterResponse {
   final String message;
   final String? updatedSkuName;
   final List<String> uploadedImageUrls;
-  final List<int> deletedImageIds;
+  final List<int> deletedImageIds; // Deprecated
+  final List<String> deletedImageFileNames; // New preferred method
   final Map<String, dynamic>? updatedSizeDetails;
   final List<String> warnings;
 
@@ -174,6 +186,7 @@ class UpdateSkuMasterResponse {
     this.updatedSkuName,
     required this.uploadedImageUrls,
     required this.deletedImageIds,
+    required this.deletedImageFileNames,
     this.updatedSizeDetails,
     required this.warnings,
   });
@@ -185,6 +198,9 @@ class UpdateSkuMasterResponse {
       updatedSkuName: json['updatedSkuName'],
       uploadedImageUrls: List<String>.from(json['uploadedImageUrls'] ?? []),
       deletedImageIds: List<int>.from(json['deletedImageIds'] ?? []),
+      deletedImageFileNames: List<String>.from(
+        json['deletedImageFileNames'] ?? [],
+      ),
       updatedSizeDetails: json['updatedSizeDetails'],
       warnings: List<String>.from(json['warnings'] ?? []),
     );
@@ -195,10 +211,7 @@ class UpdateSkuMasterBasicRequest {
   final String? skuName;
   final int? skuPrice;
 
-  UpdateSkuMasterBasicRequest({
-    this.skuName,
-    this.skuPrice,
-  });
+  UpdateSkuMasterBasicRequest({this.skuName, this.skuPrice});
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
