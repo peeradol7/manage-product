@@ -18,6 +18,7 @@ builder.Services.AddDbContext<TFHDbContext>(options =>
 builder.Services.AddScoped<ISkuMasterService, SkuMasterService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IUrlHelperService, UrlHelperService>();
+builder.Services.AddScoped<IStringCleaningService, StringCleaningService>();
 
 // Add HttpContextAccessor for URL generation
 builder.Services.AddHttpContextAccessor();

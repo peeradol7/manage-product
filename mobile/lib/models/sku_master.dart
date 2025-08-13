@@ -144,6 +144,7 @@ class UpdateSkuMasterRequest {
     final Map<String, dynamic> data = {'SkuKey': skuKey.toString()};
 
     if (skuName != null && skuName!.isNotEmpty) {
+      // Note: String cleaning will be handled by the API
       data['SkuName'] = skuName!;
     }
 
@@ -215,7 +216,10 @@ class UpdateSkuMasterBasicRequest {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
-    if (skuName != null) data['skuName'] = skuName;
+    if (skuName != null) {
+      // Note: String cleaning will be handled by the API
+      data['skuName'] = skuName;
+    }
     if (skuPrice != null) data['skuPrice'] = skuPrice;
     return data;
   }

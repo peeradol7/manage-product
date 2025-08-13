@@ -8,11 +8,13 @@ namespace SkuMasterAPI.Application.Services
     {
         private readonly TFHDbContext _context;
         private readonly IUrlHelperService _urlHelperService;
+        private readonly IStringCleaningService _stringCleaningService;
 
-        public SkuMasterService(TFHDbContext context, IUrlHelperService urlHelperService)
+        public SkuMasterService(TFHDbContext context, IUrlHelperService urlHelperService, IStringCleaningService stringCleaningService)
         {
             _context = context;
             _urlHelperService = urlHelperService;
+            _stringCleaningService = stringCleaningService;
         }
 
         public async Task<PaginationResponse<SimpleSkuMasterListDto>> GetPagedListAsync(PaginationRequest request)
@@ -23,8 +25,15 @@ namespace SkuMasterAPI.Application.Services
 
             if (!string.IsNullOrEmpty(request.SearchTerm))
             {
-                query = query.Where(s => s.SkuCode.Contains(request.SearchTerm) || 
-                                       s.SkuName.Contains(request.SearchTerm));
+                // Clean the search term to remove spaces and keep only letters
+                var cleanedSearchTerm = _stringCleaningService.CleanSearchTerm(request.SearchTerm);
+
+                if (!string.IsNullOrEmpty(cleanedSearchTerm))
+                {
+                    query = query.Where(s =>
+                        s.SkuCode.Replace(" ", "").Contains(cleanedSearchTerm) ||
+                        s.SkuName.Replace(" ", "").Contains(cleanedSearchTerm));
+                }
             }
 
             if (request.FilterNoImages)
@@ -96,7 +105,9 @@ namespace SkuMasterAPI.Application.Services
 
             if (!string.IsNullOrEmpty(dto.SkuName))
             {
-                sku.SkuName = dto.SkuName;
+                // Clean the SkuName: remove spaces and keep only letters
+                var cleanedSkuName = _stringCleaningService.CleanText(dto.SkuName);
+                sku.SkuName = !string.IsNullOrEmpty(cleanedSkuName) ? cleanedSkuName : dto.SkuName;
             }
 
             if (dto.SkuPrice.HasValue)

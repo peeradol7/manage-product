@@ -13,15 +13,18 @@ namespace SkuMasterAPI.Controllers
         private readonly TFHDbContext _context;
         private readonly IFileService _fileService;
         private readonly IWebHostEnvironment _environment;
+        private readonly IStringCleaningService _stringCleaningService;
 
         public SkuMasterImageController(
             TFHDbContext context,
             IFileService fileService,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            IStringCleaningService stringCleaningService)
         {
             _context = context;
             _fileService = fileService;
             _environment = environment;
+            _stringCleaningService = stringCleaningService;
         }
 
         /// <summary>
@@ -45,7 +48,9 @@ namespace SkuMasterAPI.Controllers
 
                 if (!string.IsNullOrEmpty(dto.SkuName))
                 {
-                    skuMaster.SkuName = dto.SkuName;
+                    // Clean the SkuName: remove spaces and keep only letters
+                    var cleanedSkuName = _stringCleaningService.CleanText(dto.SkuName);
+                    skuMaster.SkuName = !string.IsNullOrEmpty(cleanedSkuName) ? cleanedSkuName : dto.SkuName;
                 }
 
                 // Handle deletion by fileName (preferred method)

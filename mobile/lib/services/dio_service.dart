@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
 import '../models/sku_master.dart';
+import 'string_cleaning_service.dart';
 
 class ApiService {
   late Dio _dio;
@@ -62,7 +63,13 @@ class ApiService {
       final queryParams = <String, dynamic>{'page': page, 'pageSize': pageSize};
 
       if (searchTerm != null && searchTerm.isNotEmpty) {
-        queryParams['searchTerm'] = searchTerm;
+        // Clean the search term before sending to API
+        final cleanedSearchTerm = StringCleaningService.cleanSearchTerm(
+          searchTerm,
+        );
+        if (cleanedSearchTerm.isNotEmpty) {
+          queryParams['searchTerm'] = cleanedSearchTerm;
+        }
       }
 
       if (filterNoImages) {
