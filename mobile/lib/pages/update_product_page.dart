@@ -481,7 +481,7 @@ class _UpdateProductPageState extends State<UpdateProductPage> {
                   child: TextFormField(
                     controller: _weightController,
                     decoration: const InputDecoration(
-                      labelText: 'น้ำหนัก (g)',
+                      labelText: 'น้ำหนัก (kg)',
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
