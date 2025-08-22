@@ -8,7 +8,7 @@ import 'string_cleaning_service.dart';
 
 class ApiService {
   late Dio _dio;
-  static const String baseUrl = 'https://3f62d0f18ca2.ngrok-free.app/api';
+  static const String baseUrl = 'https://de1a4bd462c5.ngrok-free.app/api';
   ApiService() {
     _dio = Dio(
       BaseOptions(
@@ -19,7 +19,7 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'ngrok-skip-browser-warning': 'true', // Skip ngrok browser warning
+          'ngrok-skip-browser-warning': 'true',
         },
         validateStatus: (status) {
           return status! < 500; // Accept any status code below 500
@@ -32,7 +32,6 @@ class ApiService {
         (HttpClient client) {
           client.badCertificateCallback =
               (X509Certificate cert, String host, int port) {
-                // Allow certificates for ngrok domains
                 if (host.contains('ngrok-free.app') ||
                     host.contains('ngrok.io') ||
                     host.contains('ngrok.app')) {
@@ -63,7 +62,6 @@ class ApiService {
       final queryParams = <String, dynamic>{'page': page, 'pageSize': pageSize};
 
       if (searchTerm != null && searchTerm.isNotEmpty) {
-        // Clean the search term before sending to API
         final cleanedSearchTerm = StringCleaningService.cleanSearchTerm(
           searchTerm,
         );
@@ -124,7 +122,6 @@ class ApiService {
     }
   }
 
-  // 3. Update SkuMaster (Name, Images, Size)
   Future<UpdateSkuMasterResponse> updateSkuMaster({
     required UpdateSkuMasterRequest request,
     List<File>? newImages,
@@ -132,13 +129,11 @@ class ApiService {
     try {
       FormData formData = FormData();
 
-      // Add text fields
       final Map<String, dynamic> formFields = request.toFormData();
       formFields.forEach((key, value) {
         formData.fields.add(MapEntry(key, value.toString()));
       });
 
-      // Add image files
       if (newImages != null && newImages.isNotEmpty) {
         for (int i = 0; i < newImages.length; i++) {
           String fileName = newImages[i].path.split('/').last;
@@ -207,7 +202,6 @@ class ApiService {
     }
   }
 
-  // 4. Update SkuMaster Basic Info (Name, Price, Discontinued status)
   Future<bool> updateSkuMasterBasic({
     required int skuKey,
     required UpdateSkuMasterBasicRequest request,

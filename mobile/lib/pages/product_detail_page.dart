@@ -201,7 +201,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _buildSizeDetails() {
-    final hasSize = _product!.width != null ||
+    final hasSize =
+        _product!.width != null ||
         _product!.length != null ||
         _product!.height != null ||
         _product!.weight != null;
@@ -295,7 +296,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   _buildSizeItem(
                     'น้ำหนัก',
                     _product!.weight!,
-                    'g',
+                    'kg',
                     Icons.monitor_weight,
                   ),
               ],
@@ -535,19 +536,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -577,20 +572,20 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       body: _isLoading
           ? _buildLoadingWidget()
           : _hasError
-              ? _buildErrorWidget()
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildImageGallery(),
-                      const SizedBox(height: 16),
-                      _buildProductInfo(),
-                      const SizedBox(height: 16),
-                      _buildSizeDetails(),
-                    ],
-                  ),
-                ),
+          ? _buildErrorWidget()
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildImageGallery(),
+                  const SizedBox(height: 16),
+                  _buildProductInfo(),
+                  const SizedBox(height: 16),
+                  _buildSizeDetails(),
+                ],
+              ),
+            ),
     );
   }
 }

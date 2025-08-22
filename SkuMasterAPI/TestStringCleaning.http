@@ -1,0 +1,67 @@
+### Test String Cleaning API
+### 1. Test search with spaces and special characters
+GET https://localhost:7071/api/SkuMaster/list?searchTerm=test product 123!@#&page=1&pageSize=5
+
+
+### 2. Test search with Thai text and spaces
+GET https://localhost:7071/api/SkuMaster/list?searchTerm=สินค้า ทดสอบ 123&page=1&pageSize=5
+
+
+### 3. Test search with mixed Thai/English and spaces
+GET https://localhost:7071/api/SkuMaster/list?searchTerm=Product สินค้า Test&page=1&pageSize=5
+
+
+### 4. Test update SkuMaster basic with spaces and special characters
+PUT https://localhost:7071/api/SkuMaster/1/update-basic
+Content-Type: application/json
+
+{
+  "skuName": "Test Product Name 123!@#",
+  "skuPrice": 100
+}
+
+
+### 5. Test update SkuMaster basic with Thai text and spaces
+PUT https://localhost:7071/api/SkuMaster/1/update-basic
+Content-Type: application/json
+
+{
+  "skuName": "สินค้า ทดสอบ 123 !@#",
+  "skuPrice": 150
+}
+
+
+### 6. Test update via form data with spaces
+POST https://localhost:7071/api/SkuMasterImage/update
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="SkuKey"
+
+1
+--boundary
+Content-Disposition: form-data; name="SkuName"
+
+Mixed Product สินค้า Test 123!@#
+--boundary--
+
+
+### 7. Test empty and whitespace-only strings
+PUT https://localhost:7071/api/SkuMaster/1/update-basic
+Content-Type: application/json
+
+{
+  "skuName": "   ",
+  "skuPrice": 200
+}
+
+
+### 8. Test string with only special characters
+PUT https://localhost:7071/api/SkuMaster/1/update-basic
+Content-Type: application/json
+
+{
+  "skuName": "!@#$%^&*()123456",
+  "skuPrice": 250
+}
+
