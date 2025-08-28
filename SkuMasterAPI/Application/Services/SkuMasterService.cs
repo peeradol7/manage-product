@@ -25,14 +25,15 @@ namespace SkuMasterAPI.Application.Services
 
             if (!string.IsNullOrEmpty(request.SearchTerm))
             {
-                // Clean the search term to remove spaces and keep only letters
+                // For exact phrase search, we need to clean both the search term and the database fields
+                // to ensure they match exactly after cleaning
                 var cleanedSearchTerm = _stringCleaningService.CleanSearchTerm(request.SearchTerm);
 
                 if (!string.IsNullOrEmpty(cleanedSearchTerm))
                 {
                     query = query.Where(s =>
-                        s.SkuCode.Replace(" ", "").Contains(cleanedSearchTerm) ||
-                        s.SkuName.Replace(" ", "").Contains(cleanedSearchTerm));
+                        _stringCleaningService.CleanSearchTerm(s.SkuCode).Contains(cleanedSearchTerm) ||
+                        _stringCleaningService.CleanSearchTerm(s.SkuName).Contains(cleanedSearchTerm));
                 }
             }
 

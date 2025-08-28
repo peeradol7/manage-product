@@ -37,9 +37,21 @@ class StringCleaningService {
 
     final trimmed = searchTerm.trim();
 
-    final singleSpaced = trimmed.replaceAll(RegExp(r'\s+'), ' ');
+    // Remove all spaces and keep only letters while preserving order
+    final buffer = StringBuffer();
 
-    return cleanText(singleSpaced);
+    for (int i = 0; i < trimmed.length; i++) {
+      final char = trimmed[i];
+      final codeUnit = char.codeUnitAt(0);
+
+      if ((codeUnit >= 0x41 && codeUnit <= 0x5A) ||
+          (codeUnit >= 0x61 && codeUnit <= 0x7A) ||
+          (codeUnit >= 0x0E00 && codeUnit <= 0x0E7F)) {
+        buffer.write(char);
+      }
+    }
+
+    return buffer.toString();
   }
 
   static bool isValidText(String? input) {

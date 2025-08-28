@@ -60,13 +60,25 @@ namespace SkuMasterAPI.Application.Services
             if (string.IsNullOrWhiteSpace(searchTerm))
                 return string.Empty;
 
-            // For search terms, we want to be more flexible
-            // Remove leading/trailing spaces and compress multiple spaces to single space
+            // For exact phrase search, we need to preserve the order of characters
+            // but remove spaces and keep only letters
             var trimmed = searchTerm.Trim();
-            var singleSpaced = Regex.Replace(trimmed, @"\s+", " ");
 
-            // Then remove all spaces and keep only letters
-            return CleanText(singleSpaced);
+            // Remove all spaces and keep only letters while preserving order
+            var result = new StringBuilder();
+            foreach (char c in trimmed)
+            {
+                // Check if character is Thai (Unicode range: 0E00-0E7F)
+                // or English letter (A-Z, a-z)
+                if ((c >= 'A' && c <= 'Z') ||
+                    (c >= 'a' && c <= 'z') ||
+                    (c >= '\u0E00' && c <= '\u0E7F'))
+                {
+                    result.Append(c);
+                }
+            }
+
+            return result.ToString();
         }
     }
 }
