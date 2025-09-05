@@ -4,18 +4,18 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
 import '../models/sku_master.dart';
-import 'string_cleaning_service.dart';
 
 class ApiService {
   late Dio _dio;
   static const String baseUrl = 'https://bda1c20cc5ee.ngrok-free.app/api';
+
   ApiService() {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        sendTimeout: const Duration(seconds: 30),
+        connectTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
+        sendTimeout: const Duration(seconds: 60),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -32,9 +32,10 @@ class ApiService {
         (HttpClient client) {
           client.badCertificateCallback =
               (X509Certificate cert, String host, int port) {
-                if (host.contains('ngrok-free.app') ||
-                    host.contains('ngrok.io') ||
-                    host.contains('ngrok.app')) {
+                // Allow all ngrok domains
+                if (host.contains('ngrok') ||
+                    host.contains('localhost') ||
+                    host.contains('127.0.0.1')) {
                   return true;
                 }
                 return false;
@@ -50,6 +51,27 @@ class ApiService {
         responseHeader: false,
       ),
     );
+
+    // Add retry interceptor for connection issues
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onError: (error, handler) async {
+          if (error.type == DioExceptionType.connectionTimeout ||
+              error.type == DioExceptionType.receiveTimeout) {
+            print('Connection timeout, retrying...');
+            // Retry once
+            try {
+              final response = await _dio.fetch(error.requestOptions);
+              handler.resolve(response);
+              return;
+            } catch (e) {
+              print('Retry failed: $e');
+            }
+          }
+          handler.next(error);
+        },
+      ),
+    );
   }
 
   Future<PaginationResponse<SkuMasterList>> getSkuMasterList({
@@ -62,9 +84,7 @@ class ApiService {
       final queryParams = <String, dynamic>{'page': page, 'pageSize': pageSize};
 
       if (searchTerm != null && searchTerm.isNotEmpty) {
-        // URL encode Thai characters properly
-        final encodedSearchTerm = Uri.encodeComponent(searchTerm);
-        queryParams['searchTerm'] = encodedSearchTerm;
+        queryParams['searchTerm'] = searchTerm;
       }
 
       if (filterNoImages) {
@@ -223,10 +243,16 @@ class ApiService {
   // Test connection
   Future<bool> testConnection() async {
     try {
+      print('Testing connection to: $baseUrl');
       final response = await _dio.get('/SkuMaster/list?page=1&pageSize=1');
+      print('Connection test successful: ${response.statusCode}');
       return response.statusCode == 200;
     } catch (e) {
       print('Connection test failed: $e');
+      if (e is DioException) {
+        print('DioException type: ${e.type}');
+        print('DioException message: ${e.message}');
+      }
       return false;
     }
   }
