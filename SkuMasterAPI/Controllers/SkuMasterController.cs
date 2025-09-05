@@ -7,7 +7,7 @@ namespace SkuMasterAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Produces("application/json; charset=utf-8")]
+    [Produces("application/json")]
     public class SkuMasterController : ControllerBase
     {
         private readonly ISkuMasterService _skuMasterService;
