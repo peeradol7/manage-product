@@ -8,7 +8,7 @@ import 'string_cleaning_service.dart';
 
 class ApiService {
   late Dio _dio;
-  static const String baseUrl = 'https://a33a54b4f1f4.ngrok-free.app/api';
+  static const String baseUrl = 'https://bda1c20cc5ee.ngrok-free.app/api';
   ApiService() {
     _dio = Dio(
       BaseOptions(

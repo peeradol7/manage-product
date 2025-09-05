@@ -15,11 +15,11 @@ class SkuMasterList {
 
   factory SkuMasterList.fromJson(Map<String, dynamic> json) {
     return SkuMasterList(
-      skuKey: json['skuKey'] ?? 0,
-      skuCode: json['skuCode'] ?? '',
-      skuName: json['skuName'] ?? '',
-      imageUrls: List<String>.from(json['imageUrls'] ?? []),
-      skuPrice: json['skuPrice'],
+      skuKey: json['SkuKey'] ?? 0,
+      skuCode: json['SkuCode'] ?? '',
+      skuName: json['SkuName'] ?? '',
+      imageUrls: List<String>.from(json['ImageUrls'] ?? []),
+      skuPrice: json['SkuPrice'],
     );
   }
 
@@ -58,13 +58,13 @@ class SkuMasterDetail {
 
   factory SkuMasterDetail.fromJson(Map<String, dynamic> json) {
     return SkuMasterDetail(
-      skuKey: json['skuKey'] ?? 0,
-      skuName: json['skuName'] ?? '',
-      imageUrls: List<String>.from(json['imageUrls'] ?? []),
-      width: json['width']?.toDouble(),
-      length: json['length']?.toDouble(),
-      height: json['height']?.toDouble(),
-      weight: json['weight']?.toDouble(),
+      skuKey: json['SkuKey'] ?? 0,
+      skuName: json['SkuName'] ?? '',
+      imageUrls: List<String>.from(json['ImageUrls'] ?? []),
+      width: json['Width']?.toDouble(),
+      length: json['Length']?.toDouble(),
+      height: json['Height']?.toDouble(),
+      weight: json['Weight']?.toDouble(),
     );
   }
 
@@ -105,15 +105,17 @@ class PaginationResponse<T> {
     T Function(Map<String, dynamic>) fromJsonT,
   ) {
     return PaginationResponse(
-      data: (json['data'] as List)
-          .map((item) => fromJsonT(item as Map<String, dynamic>))
-          .toList(),
-      currentPage: json['currentPage'] ?? 1,
-      pageSize: json['pageSize'] ?? 20,
-      totalCount: json['totalCount'] ?? 0,
-      totalPages: json['totalPages'] ?? 0,
-      hasPreviousPage: json['hasPreviousPage'] ?? false,
-      hasNextPage: json['hasNextPage'] ?? false,
+      data:
+          (json['Data'] as List?)
+              ?.map((item) => fromJsonT(item as Map<String, dynamic>))
+              .toList() ??
+          [],
+      currentPage: json['CurrentPage'] ?? 1,
+      pageSize: json['PageSize'] ?? 20,
+      totalCount: json['TotalCount'] ?? 0,
+      totalPages: json['TotalPages'] ?? 0,
+      hasPreviousPage: json['HasPreviousPage'] ?? false,
+      hasNextPage: json['HasNextPage'] ?? false,
     );
   }
 }
