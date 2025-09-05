@@ -392,7 +392,7 @@ class _ProductListPageState extends State<ProductListPage> {
               controller: _searchController,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
-                hintText: 'ค้นหาสินค้าจาก โค้ด และ ชื่อ',
+                hintText: 'ค้นหาสินค้าจาก ชื่อ',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchTerm.isNotEmpty
                     ? IconButton(

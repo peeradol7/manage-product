@@ -53,7 +53,7 @@ namespace SkuMasterAPI.Application.Services
         }
 
         /// <summary>
-        /// Clean search term: remove spaces and keep only letters for searching
+        /// Clean search term: remove spaces and keep letters and numbers for searching
         /// </summary>
         public string CleanSearchTerm(string? searchTerm)
         {
@@ -61,17 +61,18 @@ namespace SkuMasterAPI.Application.Services
                 return string.Empty;
 
             // For exact phrase search, we need to preserve the order of characters
-            // but remove spaces and keep only letters
+            // but remove spaces and keep letters and numbers
             var trimmed = searchTerm.Trim();
 
-            // Remove all spaces and keep only letters while preserving order
+            // Remove all spaces and keep letters and numbers while preserving order
             var result = new StringBuilder();
             foreach (char c in trimmed)
             {
                 // Check if character is Thai (Unicode range: 0E00-0E7F)
-                // or English letter (A-Z, a-z)
+                // or English letter (A-Z, a-z) or digit (0-9)
                 if ((c >= 'A' && c <= 'Z') ||
                     (c >= 'a' && c <= 'z') ||
+                    (c >= '0' && c <= '9') ||
                     (c >= '\u0E00' && c <= '\u0E7F'))
                 {
                     result.Append(c);

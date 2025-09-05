@@ -62,12 +62,9 @@ class ApiService {
       final queryParams = <String, dynamic>{'page': page, 'pageSize': pageSize};
 
       if (searchTerm != null && searchTerm.isNotEmpty) {
-        final cleanedSearchTerm = StringCleaningService.cleanSearchTerm(
-          searchTerm,
-        );
-        if (cleanedSearchTerm.isNotEmpty) {
-          queryParams['searchTerm'] = cleanedSearchTerm;
-        }
+        // URL encode Thai characters properly
+        final encodedSearchTerm = Uri.encodeComponent(searchTerm);
+        queryParams['searchTerm'] = encodedSearchTerm;
       }
 
       if (filterNoImages) {

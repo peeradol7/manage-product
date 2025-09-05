@@ -25,15 +25,22 @@ namespace SkuMasterAPI.Application.Services
 
             if (!string.IsNullOrEmpty(request.SearchTerm))
             {
-                // For exact phrase search, we need to clean both the search term and the database fields
-                // to ensure they match exactly after cleaning
                 var cleanedSearchTerm = _stringCleaningService.CleanSearchTerm(request.SearchTerm);
 
                 if (!string.IsNullOrEmpty(cleanedSearchTerm))
                 {
-                    query = query.Where(s =>
-                        _stringCleaningService.CleanSearchTerm(s.SkuCode).Contains(cleanedSearchTerm) ||
-                        _stringCleaningService.CleanSearchTerm(s.SkuName).Contains(cleanedSearchTerm));
+                    var originalWords = request.SearchTerm.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                    var cleanedWords = originalWords
+                        .Select(word => _stringCleaningService.CleanSearchTerm(word))
+                        .Where(word => !string.IsNullOrEmpty(word))
+                        .ToArray();
+
+                    foreach (var word in cleanedWords)
+                    {
+                        query = query.Where(s =>
+                            EF.Functions.Like(s.SkuName.Replace(" ", ""), $"%{word}%"));
+                    }
                 }
             }
 

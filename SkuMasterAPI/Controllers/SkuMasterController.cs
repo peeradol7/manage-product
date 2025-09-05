@@ -7,6 +7,7 @@ namespace SkuMasterAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Produces("application/json; charset=utf-8")]
     public class SkuMasterController : ControllerBase
     {
         private readonly ISkuMasterService _skuMasterService;
@@ -25,15 +26,22 @@ namespace SkuMasterAPI.Controllers
             [FromQuery] string? searchTerm = null,
             [FromQuery] bool filterNoImages = false)
         {
-            var request = new PaginationRequest 
-            { 
-                Page = page, 
-                PageSize = pageSize,
-                SearchTerm = searchTerm,
-                FilterNoImages = filterNoImages
-            };
-            var result = await _skuMasterService.GetPagedListAsync(request);
-            return Ok(result);
+            try
+            {
+                var request = new PaginationRequest
+                {
+                    Page = page,
+                    PageSize = pageSize,
+                    SearchTerm = searchTerm,
+                    FilterNoImages = filterNoImages
+                };
+                var result = await _skuMasterService.GetPagedListAsync(request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message, searchTerm = searchTerm });
+            }
         }
 
         /// <summary>
