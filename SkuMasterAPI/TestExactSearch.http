@@ -1,0 +1,25 @@
+### Test Exact Phrase Search Functionality
+
+### Test Case 1: Search for "ราง 18" - Should return only exact matches
+GET {{baseUrl}}/api/SkuMaster/list?searchTerm=ราง 18&page=1&pageSize=20
+
+### Test Case 2: Search for "ราง" - Should return all items with "ราง"
+GET {{baseUrl}}/api/SkuMaster/list?searchTerm=ราง&page=1&pageSize=20
+
+### Test Case 3: Search for "18" - Should return all items with "18"
+GET {{baseUrl}}/api/SkuMaster/list?searchTerm=18&page=1&pageSize=20
+
+### Test Case 4: Search for "อะไล่" - Should return only "อะไล่ (รางสีชา)"
+GET {{baseUrl}}/api/SkuMaster/list?searchTerm=อะไล่&page=1&pageSize=20
+
+### Test Case 5: Search for "ราง  18  นิ้ว" - Should match "ราง 18 นิ้ว" (extra spaces)
+GET {{baseUrl}}/api/SkuMaster/list?searchTerm=ราง  18  นิ้ว&page=1&pageSize=20
+
+### Test Case 6: Search for "18 นิ้ว ราง" - Should NOT match (different order)
+GET {{baseUrl}}/api/SkuMaster/list?searchTerm=18 นิ้ว ราง&page=1&pageSize=20
+
+### Test Case 7: Search for "ท่อ PVC" - Should return only "ท่อ PVC 18 นิ้ว"
+GET {{baseUrl}}/api/SkuMaster/list?searchTerm=ท่อ PVC&page=1&pageSize=20
+
+### Test Case 8: Empty search - Should return all items
+GET {{baseUrl}}/api/SkuMaster/list?page=1&pageSize=20
