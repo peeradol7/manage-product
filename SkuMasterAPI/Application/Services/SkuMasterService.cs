@@ -49,10 +49,11 @@ namespace SkuMasterAPI.Application.Services
                 query = query.Where(s => !s.SkuMasterImages.Any());
             }
 
+            query = query.OrderBy(s => s.SkuName);
+
             var totalCount = await query.CountAsync();
 
             var items = await query
-                .OrderBy(s => s.SkuName) // Add explicit ordering
                 .Skip(request.GetSkip())
                 .Take(request.GetTake())
                 .Select(s => new SimpleSkuMasterListDto

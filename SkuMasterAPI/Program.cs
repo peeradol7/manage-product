@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc.Formatters;
 using System.Text.Json.Serialization.Metadata;
-using System.Linq;
 using SkuMasterAPI.Models;
 using SkuMasterAPI.Application.Services;
 
@@ -14,24 +12,7 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
-    })
-    .AddMvcOptions(options =>
-    {
-        // Keep default formatters and add custom JSON formatter
-        var jsonOptions = new System.Text.Json.JsonSerializerOptions
-        {
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            PropertyNamingPolicy = null,
-            TypeInfoResolver = new DefaultJsonTypeInfoResolver()
-        };
-
-        // Remove existing JSON formatter and add our custom one
-        var existingJsonFormatter = options.OutputFormatters.OfType<SystemTextJsonOutputFormatter>().FirstOrDefault();
-        if (existingJsonFormatter != null)
-        {
-            options.OutputFormatters.Remove(existingJsonFormatter);
-        }
-        options.OutputFormatters.Add(new SystemTextJsonOutputFormatter(jsonOptions));
+        options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
     });
 
 builder.Services.AddEndpointsApiExplorer();
