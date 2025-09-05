@@ -52,6 +52,7 @@ namespace SkuMasterAPI.Application.Services
             var totalCount = await query.CountAsync();
 
             var items = await query
+                .OrderBy(s => s.SkuName) // Add explicit ordering
                 .Skip(request.GetSkip())
                 .Take(request.GetTake())
                 .Select(s => new SimpleSkuMasterListDto

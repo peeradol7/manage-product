@@ -1,73 +1,97 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Text.Json.Serialization.Metadata;
+using System.Linq;
 using SkuMasterAPI.Models;
 using SkuMasterAPI.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure encoding for Thai language support
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
-// Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    })
+    .AddMvcOptions(options =>
+    {
+        // Keep default formatters and add custom JSON formatter
+        var jsonOptions = new System.Text.Json.JsonSerializerOptions
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            PropertyNamingPolicy = null,
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver()
+        };
+
+        // Remove existing JSON formatter and add our custom one
+        var existingJsonFormatter = options.OutputFormatters.OfType<SystemTextJsonOutputFormatter>().FirstOrDefault();
+        if (existingJsonFormatter != null)
+        {
+            options.OutputFormatters.Remove(existingJsonFormatter);
+        }
+        options.OutputFormatters.Add(new SystemTextJsonOutputFormatter(jsonOptions));
     });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add Entity Framework
 builder.Services.AddDbContext<TFHDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("TFHDatabase")));
 
-// Add Application Services
 builder.Services.AddScoped<ISkuMasterService, SkuMasterService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IUrlHelperService, UrlHelperService>();
 builder.Services.AddScoped<IStringCleaningService, StringCleaningService>();
 
-// Add HttpContextAccessor for URL generation
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// Ensure database is created
+// Test database connection
 using (var scope = app.Services.CreateScope())
+
 {
     var context = scope.ServiceProvider.GetRequiredService<TFHDbContext>();
     try
     {
-        context.Database.EnsureCreated();
-        Console.WriteLine("Database ensured/created successfully");
+        // Test connection first
+        var canConnect = await context.Database.CanConnectAsync();
+        if (canConnect)
+        {
+            Console.WriteLine("Database connection successful");
+            context.Database.EnsureCreated();
+            Console.WriteLine("Database ensured/created successfully");
+        }
+        else
+        {
+            Console.WriteLine("Cannot connect to database");
+        }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Database creation error: {ex.Message}");
+        Console.WriteLine($"Database connection error: {ex.Message}");
+        Console.WriteLine("Please check:");
+        Console.WriteLine("1. SQL Server is running");
+        Console.WriteLine("2. Connection string is correct");
+        Console.WriteLine("3. Network connectivity to database server");
     }
 }
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Only use HTTPS redirection in production or when HTTPS is properly configured
 if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
 
-// Enable static files serving for images
 app.UseStaticFiles();
 
-// Add authorization (if needed in the future)
-// app.UseAuthorization();
-
-// Map controller routes
 app.MapControllers();
 
 app.Run();
