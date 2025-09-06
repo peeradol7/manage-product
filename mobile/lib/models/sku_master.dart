@@ -57,15 +57,45 @@ class SkuMasterDetail {
   });
 
   factory SkuMasterDetail.fromJson(Map<String, dynamic> json) {
-    return SkuMasterDetail(
+    print('=== SkuMasterDetail.fromJson START ===');
+    print('Input JSON: $json');
+    print('Width raw: ${json['Width']} (type: ${json['Width'].runtimeType})');
+    print(
+      'Length raw: ${json['Length']} (type: ${json['Length'].runtimeType})',
+    );
+    print(
+      'Height raw: ${json['Height']} (type: ${json['Height'].runtimeType})',
+    );
+    print(
+      'Weight raw: ${json['Weight']} (type: ${json['Weight'].runtimeType})',
+    );
+
+    final width = json['Width']?.toDouble();
+    final length = json['Length']?.toDouble();
+    final height = json['Height']?.toDouble();
+    final weight = json['Weight']?.toDouble();
+
+    print('Width converted: $width (type: ${width.runtimeType})');
+    print('Length converted: $length (type: ${length.runtimeType})');
+    print('Height converted: $height (type: ${height.runtimeType})');
+    print('Weight converted: $weight (type: ${weight.runtimeType})');
+
+    final result = SkuMasterDetail(
       skuKey: json['SkuKey'] ?? 0,
       skuName: json['SkuName'] ?? '',
       imageUrls: List<String>.from(json['ImageUrls'] ?? []),
-      width: json['Width']?.toDouble(),
-      length: json['Length']?.toDouble(),
-      height: json['Height']?.toDouble(),
-      weight: json['Weight']?.toDouble(),
+      width: width,
+      length: length,
+      height: height,
+      weight: weight,
     );
+
+    print(
+      'Final result: width=${result.width}, length=${result.length}, height=${result.height}, weight=${result.weight}',
+    );
+    print('=== SkuMasterDetail.fromJson END ===');
+
+    return result;
   }
 
   Map<String, dynamic> toJson() {
@@ -195,17 +225,45 @@ class UpdateSkuMasterResponse {
   });
 
   factory UpdateSkuMasterResponse.fromJson(Map<String, dynamic> json) {
+    // Handle both API response formats (capitalized and lowercase)
+    final success = json['Success'] ?? json['success'] ?? false;
+    final message = json['Message'] ?? json['message'] ?? '';
+    final updatedSkuName = json['UpdatedSkuName'] ?? json['updatedSkuName'];
+
+    // Handle uploaded images - API returns list of objects, mobile expects list of URLs
+    List<String> uploadedImageUrls = [];
+    if (json['UploadedImages'] != null) {
+      final uploadedImages = json['UploadedImages'] as List;
+      uploadedImageUrls = uploadedImages
+          .map((img) => img['ImagePath'] ?? img['ImageName'] ?? '')
+          .where((url) => url.isNotEmpty)
+          .cast<String>()
+          .toList();
+    } else if (json['uploadedImageUrls'] != null) {
+      uploadedImageUrls = List<String>.from(json['uploadedImageUrls'] ?? []);
+    }
+
+    final deletedImageIds = List<int>.from(
+      json['DeletedImageIds'] ?? json['deletedImageIds'] ?? [],
+    );
+    final deletedImageFileNames = List<String>.from(
+      json['DeletedImageFileNames'] ?? json['deletedImageFileNames'] ?? [],
+    );
+    final updatedSizeDetails =
+        json['UpdatedSizeDetail'] ?? json['updatedSizeDetails'];
+    final warnings = List<String>.from(
+      json['Warnings'] ?? json['warnings'] ?? [],
+    );
+
     return UpdateSkuMasterResponse(
-      success: json['success'] ?? false,
-      message: json['message'] ?? '',
-      updatedSkuName: json['updatedSkuName'],
-      uploadedImageUrls: List<String>.from(json['uploadedImageUrls'] ?? []),
-      deletedImageIds: List<int>.from(json['deletedImageIds'] ?? []),
-      deletedImageFileNames: List<String>.from(
-        json['deletedImageFileNames'] ?? [],
-      ),
-      updatedSizeDetails: json['updatedSizeDetails'],
-      warnings: List<String>.from(json['warnings'] ?? []),
+      success: success,
+      message: message,
+      updatedSkuName: updatedSkuName,
+      uploadedImageUrls: uploadedImageUrls,
+      deletedImageIds: deletedImageIds,
+      deletedImageFileNames: deletedImageFileNames,
+      updatedSizeDetails: updatedSizeDetails,
+      warnings: warnings,
     );
   }
 }

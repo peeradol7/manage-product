@@ -43,12 +43,19 @@ class ApiService {
           return client;
         };
 
+    // Only log in debug mode
     _dio.interceptors.add(
       LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        requestHeader: true,
+        requestBody: false,
+        responseBody: false,
+        requestHeader: false,
         responseHeader: false,
+        logPrint: (obj) {
+          // Only log errors in production
+          if (obj.toString().contains('ERROR')) {
+            print(obj);
+          }
+        },
       ),
     );
 
@@ -79,6 +86,7 @@ class ApiService {
     int pageSize = 20,
     String? searchTerm,
     bool filterNoImages = false,
+    bool forceRefresh = false,
   }) async {
     try {
       final queryParams = <String, dynamic>{'page': page, 'pageSize': pageSize};
@@ -91,9 +99,15 @@ class ApiService {
         queryParams['filterNoImages'] = filterNoImages;
       }
 
+      // Add cache busting parameter when force refresh is requested
+      if (forceRefresh) {
+        queryParams['_t'] = DateTime.now().millisecondsSinceEpoch;
+      }
+
       final response = await _dio.get(
         '/SkuMaster/list',
         queryParameters: queryParams,
+        options: Options(headers: {'Cache-Control': 'no-cache'}),
       );
 
       if (response.statusCode == 200) {
@@ -117,12 +131,34 @@ class ApiService {
     }
   }
 
-  Future<SkuMasterDetail> getSkuMasterDetail(int skuKey) async {
+  Future<SkuMasterDetail> getSkuMasterDetail(
+    int skuKey, {
+    bool forceRefresh = false,
+  }) async {
     try {
-      final response = await _dio.get('/SkuMaster/$skuKey/detail');
+      final queryParams = <String, dynamic>{};
+      final headers = <String, dynamic>{};
+
+      // Always use strong cache busting for now
+      queryParams['_t'] = DateTime.now().millisecondsSinceEpoch;
+      headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+      headers['Pragma'] = 'no-cache';
+      headers['Expires'] = '0';
+
+      final response = await _dio.get(
+        '/SkuMaster/$skuKey/detail',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+        options: Options(headers: headers),
+      );
 
       if (response.statusCode == 200) {
-        return SkuMasterDetail.fromJson(response.data);
+        // Debug: Print response data to see what we're getting
+        print('API Response for SKU $skuKey: ${response.data}');
+        final product = SkuMasterDetail.fromJson(response.data);
+        print(
+          'Parsed product - Width: ${product.width}, Length: ${product.length}, Height: ${product.height}, Weight: ${product.weight}',
+        );
+        return product;
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -131,10 +167,8 @@ class ApiService {
         );
       }
     } on DioException catch (e) {
-      print('DioException in getSkuMasterDetail: ${e.message}');
       throw _handleDioException(e);
     } catch (e) {
-      print('Unexpected error in getSkuMasterDetail: $e');
       throw Exception('Unexpected error: $e');
     }
   }
@@ -173,6 +207,9 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
+        return UpdateSkuMasterResponse.fromJson(response.data);
+      } else if (response.statusCode == 400) {
+        // Handle BadRequest - parse the response to get error details
         return UpdateSkuMasterResponse.fromJson(response.data);
       } else {
         throw DioException(

@@ -26,7 +26,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   @override
   void initState() {
     super.initState();
-    _loadProductDetail();
+    // Load product detail once when page opens
+    _loadProductDetail(forceRefresh: false);
   }
 
   @override
@@ -35,7 +36,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     super.dispose();
   }
 
-  Future<void> _loadProductDetail() async {
+  Future<void> _loadProductDetail({bool forceRefresh = false}) async {
     setState(() {
       _isLoading = true;
       _hasError = false;
@@ -43,17 +44,26 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     });
 
     try {
-      final product = await _apiService.getSkuMasterDetail(widget.skuKey);
-      setState(() {
-        _product = product;
-        _isLoading = false;
-      });
+      final product = await _apiService.getSkuMasterDetail(
+        widget.skuKey,
+        forceRefresh: forceRefresh,
+      );
+
+      // Update UI with new data
+      if (mounted) {
+        setState(() {
+          _product = product;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _hasError = true;
-        _errorMessage = e.toString();
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+          _errorMessage = e.toString();
+        });
+      }
     }
   }
 
@@ -107,8 +117,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               },
               itemCount: _product!.imageUrls.length,
               itemBuilder: (context, index) {
+                // Add cache busting parameter to image URL
+                final imageUrl = _product!.imageUrls[index];
+                final cacheBustedUrl = imageUrl.contains('?')
+                    ? '$imageUrl&_t=${DateTime.now().millisecondsSinceEpoch}'
+                    : '$imageUrl?_t=${DateTime.now().millisecondsSinceEpoch}';
+
                 return Image.network(
-                  _product!.imageUrls[index],
+                  cacheBustedUrl,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
@@ -123,7 +139,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     );
                   },
                   loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
+                    if (loadingProgress == null) {
+                      return child;
+                    }
                     return Container(
                       color: Colors.grey[200],
                       child: const Center(child: CircularProgressIndicator()),
@@ -201,13 +219,42 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _buildSizeDetails() {
+    print('=== _buildSizeDetails START ===');
+    print('_product is null: ${_product == null}');
+    if (_product != null) {
+      print('_product details:');
+      print('  - SkuName: ${_product!.skuName}');
+      print(
+        '  - Width: ${_product!.width} (type: ${_product!.width.runtimeType})',
+      );
+      print(
+        '  - Length: ${_product!.length} (type: ${_product!.length.runtimeType})',
+      );
+      print(
+        '  - Height: ${_product!.height} (type: ${_product!.height.runtimeType})',
+      );
+      print(
+        '  - Weight: ${_product!.weight} (type: ${_product!.weight.runtimeType})',
+      );
+    }
+
+    // Force rebuild when product data changes
     final hasSize =
-        _product!.width != null ||
-        _product!.length != null ||
-        _product!.height != null ||
-        _product!.weight != null;
+        _product?.width != null ||
+        _product?.length != null ||
+        _product?.height != null ||
+        _product?.weight != null;
+
+    print('hasSize calculation:');
+    print('  - width != null: ${_product?.width != null}');
+    print('  - length != null: ${_product?.length != null}');
+    print('  - height != null: ${_product?.height != null}');
+    print('  - weight != null: ${_product?.weight != null}');
+    print('  - hasSize result: $hasSize');
 
     if (!hasSize) {
+      print('Returning "no size data" card');
+      print('=== _buildSizeDetails END (no size) ===');
       return Card(
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -245,6 +292,22 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       );
     }
 
+    print('Returning "has size data" card');
+    print('Building size items:');
+    print(
+      '  - width item: ${_product?.width != null ? "YES (${_product!.width})" : "NO"}',
+    );
+    print(
+      '  - length item: ${_product?.length != null ? "YES (${_product!.length})" : "NO"}',
+    );
+    print(
+      '  - height item: ${_product?.height != null ? "YES (${_product!.height})" : "NO"}',
+    );
+    print(
+      '  - weight item: ${_product?.weight != null ? "YES (${_product!.weight})" : "NO"}',
+    );
+    print('=== _buildSizeDetails END (has size) ===');
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -276,23 +339,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               children: [
-                if (_product!.width != null)
+                if (_product?.width != null)
                   _buildSizeItem(
                     'กว้าง',
                     _product!.width!,
                     'cm',
                     Icons.width_normal,
                   ),
-                if (_product!.length != null)
+                if (_product?.length != null)
                   _buildSizeItem('ยาว', _product!.length!, 'cm', Icons.height),
-                if (_product!.height != null)
+                if (_product?.height != null)
                   _buildSizeItem(
                     'สูง',
                     _product!.height!,
                     'cm',
                     Icons.vertical_align_top,
                   ),
-                if (_product!.weight != null)
+                if (_product?.weight != null)
                   _buildSizeItem(
                     'น้ำหนัก',
                     _product!.weight!,
@@ -313,6 +376,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     String unit,
     IconData icon,
   ) {
+    print('_buildSizeItem: $label = $value $unit (type: ${value.runtimeType})');
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -386,7 +450,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _loadProductDetail,
+              onPressed: () => _loadProductDetail(forceRefresh: true),
               child: const Text('ลองใหม่'),
             ),
           ],
@@ -395,17 +459,22 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  void _navigateToEdit() {
-    if (_product != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => UpdateProductPage(product: _product!),
-        ),
-      ).then((_) {
-        // Refresh detail when returning from edit page
-        _loadProductDetail();
-      });
+  Future<void> _navigateToEdit() async {
+    if (_product == null) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UpdateProductPage(product: _product!),
+      ),
+    );
+
+    // Only refresh if there was a successful update
+    if (result == true && mounted) {
+      await _loadProductDetail(forceRefresh: true);
+      if (mounted) {
+        Navigator.of(context).pop(true); // Return true to trigger list refresh
+      }
     }
   }
 
@@ -525,7 +594,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       if (success) {
         Navigator.of(context).pop(); // Close dialog
         _showSuccessSnackBar('อัปเดตข้อมูลสำเร็จ');
-        _loadProductDetail(); // Refresh data
+        // Refresh data first, then return to parent page
+        _loadProductDetail(forceRefresh: true).then((_) {
+          print('Basic info updated, returning to parent page');
+          Navigator.of(
+            context,
+          ).pop(true); // Return true to trigger list refresh
+        });
       } else {
         _showErrorSnackBar('เกิดข้อผิดพลาดในการอัปเดต');
       }

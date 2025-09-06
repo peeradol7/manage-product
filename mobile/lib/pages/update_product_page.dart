@@ -532,12 +532,27 @@ class _UpdateProductPageState extends State<UpdateProductPage> {
             : null,
       );
 
+      print('Saving changes for SKU: ${widget.product.skuKey}');
+      print(
+        'Request data: width=${request.width}, length=${request.length}, height=${request.height}, weight=${request.weight}',
+      );
+      print('New images count: ${_newImages.length}');
+      print('Deleted image file names: $_deletedImageFileNames');
+
+      // Debug: Check if size values are actually being sent
+      print('Width controller: ${_widthController.text}');
+      print('Length controller: ${_lengthController.text}');
+      print('Height controller: ${_heightController.text}');
+      print('Weight controller: ${_weightController.text}');
+
       final response = await _apiService.updateSkuMaster(
         request: request,
         newImages: _newImages.isNotEmpty ? _newImages : null,
       );
 
       if (response.success) {
+        print('Update successful for SKU: ${widget.product.skuKey}');
+        print('Response: ${response.message}');
         _showSnackBar('บันทึกข้อมูลเรียบร้อย');
 
         // Show warnings if any
@@ -549,9 +564,12 @@ class _UpdateProductPageState extends State<UpdateProductPage> {
 
         // Go back to previous page
         if (mounted) {
+          print('Returning true to indicate successful update');
           Navigator.pop(context, true); // Return true to indicate success
         }
       } else {
+        print('Update failed for SKU: ${widget.product.skuKey}');
+        print('Error: ${response.message}');
         _showSnackBar('เกิดข้อผิดพลาด: ${response.message}', isError: true);
       }
     } catch (e) {

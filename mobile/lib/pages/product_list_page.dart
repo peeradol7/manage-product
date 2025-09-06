@@ -30,13 +30,13 @@ class _ProductListPageState extends State<ProductListPage> {
 
   int _totalCount = 0;
   bool _hasNextPage = false;
-  bool _hasPreviousPage = false;
 
   @override
   void initState() {
     super.initState();
-    _loadProducts();
     _scrollController.addListener(_onScroll);
+    // Load products once when page opens
+    _loadProducts(refresh: false);
   }
 
   @override
@@ -71,13 +71,20 @@ class _ProductListPageState extends State<ProductListPage> {
     });
 
     try {
+      print(
+        'Loading products - page: $_currentPage, refresh: $refresh, searchTerm: $_searchTerm, filterNoImages: $_filterNoImages',
+      );
       final response = await _apiService.getSkuMasterList(
         page: _currentPage,
         pageSize: 20,
         searchTerm: _searchTerm.isNotEmpty ? _searchTerm : null,
         filterNoImages: _filterNoImages,
+        forceRefresh: refresh, // Force refresh when explicitly requested
       );
 
+      print(
+        'Products loaded: ${response.data.length} items, total: ${response.totalCount}',
+      );
       setState(() {
         if (refresh) {
           _products = response.data;
@@ -87,11 +94,11 @@ class _ProductListPageState extends State<ProductListPage> {
         _totalPages = response.totalPages;
         _totalCount = response.totalCount;
         _hasNextPage = response.hasNextPage;
-        _hasPreviousPage = response.hasPreviousPage;
         _isLoading = false;
         _hasError = false;
       });
     } catch (e) {
+      print('Error loading products: $e');
       setState(() {
         _isLoading = false;
         _hasError = true;
@@ -350,13 +357,22 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   void _navigateToDetail(int skuKey) {
+    print('Navigating to detail page for SKU: $skuKey');
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ProductDetailPage(skuKey: skuKey),
       ),
-    ).then((_) {
-      _refreshProducts();
+    ).then((result) {
+      print('Returned from detail page with result: $result');
+      // Only refresh if there was a successful update
+      if (result == true) {
+        print('Refreshing products list due to successful update');
+        // Add a small delay to ensure the detail page refresh completes
+        Future.delayed(const Duration(milliseconds: 200), () {
+          _refreshProducts();
+        });
+      }
     });
   }
 
