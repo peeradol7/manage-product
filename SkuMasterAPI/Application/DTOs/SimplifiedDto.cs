@@ -45,47 +45,35 @@ namespace SkuMasterAPI.Application.DTOs
 
     public class UpdateSkuMasterResponseDto
     {
+        [System.Text.Json.Serialization.JsonPropertyName("Success")]
         public bool Success { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("Message")]
         public string Message { get; set; } = string.Empty;
 
         // Updated name
+        [System.Text.Json.Serialization.JsonPropertyName("UpdatedSkuName")]
         public string? UpdatedSkuName { get; set; }
 
         // Upload results
+        [System.Text.Json.Serialization.JsonPropertyName("UploadedImages")]
         public List<SkuMasterImageDto> UploadedImages { get; set; } = new List<SkuMasterImageDto>();
+
+        [System.Text.Json.Serialization.JsonPropertyName("DeletedImageIds")]
         public List<int> DeletedImageIds { get; set; } = new List<int>();
+
+        [System.Text.Json.Serialization.JsonPropertyName("DeletedImageFileNames")]
         public List<string> DeletedImageFileNames { get; set; } = new List<string>();
 
         // Size update result
+        [System.Text.Json.Serialization.JsonPropertyName("UpdatedSizeDetail")]
         public SkuSizeDetailDto? UpdatedSizeDetail { get; set; }
 
+        [System.Text.Json.Serialization.JsonPropertyName("Errors")]
         public List<string> Errors { get; set; } = new List<string>();
+
+        [System.Text.Json.Serialization.JsonPropertyName("Warnings")]
         public List<string> Warnings { get; set; } = new List<string>();
-
-        // Add properties for mobile compatibility (lowercase) - using JsonPropertyName to avoid conflicts
-        [System.Text.Json.Serialization.JsonPropertyName("success")]
-        public bool success => Success;
-
-        [System.Text.Json.Serialization.JsonPropertyName("message")]
-        public string message => Message;
-
-        [System.Text.Json.Serialization.JsonPropertyName("updatedSkuName")]
-        public string? updatedSkuName => UpdatedSkuName;
-
-        [System.Text.Json.Serialization.JsonPropertyName("uploadedImageUrls")]
-        public List<string> uploadedImageUrls => UploadedImages.Select(img => img.ImagePath ?? img.ImageName).ToList();
-
-        [System.Text.Json.Serialization.JsonPropertyName("deletedImageIds")]
-        public List<int> deletedImageIds => DeletedImageIds;
-
-        [System.Text.Json.Serialization.JsonPropertyName("deletedImageFileNames")]
-        public List<string> deletedImageFileNames => DeletedImageFileNames;
-
-        [System.Text.Json.Serialization.JsonPropertyName("updatedSizeDetail")]
-        public SkuSizeDetailDto? updatedSizeDetail => UpdatedSizeDetail;
-
-        [System.Text.Json.Serialization.JsonPropertyName("warnings")]
-        public List<string> warnings => Warnings;
     }
 
     // Simplified Detail DTO for response
