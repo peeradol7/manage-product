@@ -167,12 +167,14 @@ namespace SkuMasterAPI.Controllers
 
                     if (existingSizeDetail != null)
                     {
-
+                        // Update existing size detail
                         if (dto.Width.HasValue) existingSizeDetail.Width = dto.Width;
                         if (dto.Length.HasValue) existingSizeDetail.Length = dto.Length;
                         if (dto.Height.HasValue) existingSizeDetail.Height = dto.Height;
                         if (dto.Weight.HasValue) existingSizeDetail.Weight = dto.Weight;
                         existingSizeDetail.DateTimeUpdate = DateTime.Now;
+
+                        _context.Entry(existingSizeDetail).State = EntityState.Modified;
                     }
                     else
                     {
