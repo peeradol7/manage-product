@@ -128,5 +128,49 @@ namespace SkuMasterAPI.Application.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<List<string>> GetDatabaseTablesAsync()
+        {
+            var tables = new List<string>();
+
+            // Get table names from sys.tables
+            var tableNames = await _context.Database.SqlQueryRaw<string>(
+                "SELECT name FROM sys.tables ORDER BY name").ToListAsync();
+
+            tables.AddRange(tableNames);
+
+            return tables;
+        }
+
+        public async Task<object> GetSampleDataAsync()
+        {
+            // Get sample data from SKUMASTER table
+            var sampleSku = await _context.SkuMasters
+                .Include(s => s.SkuMasterImages)
+                .Include(s => s.SkuSizeDetails)
+                .FirstOrDefaultAsync();
+
+            if (sampleSku == null)
+            {
+                return new { message = "No data found in SKUMASTER table" };
+            }
+
+            return new
+            {
+                skuKey = sampleSku.SkuKey,
+                skuName = sampleSku.SkuName,
+                skuCode = sampleSku.SkuCode,
+                skuPrice = sampleSku.SkuPrice,
+                imageCount = sampleSku.SkuMasterImages.Count,
+                hasSizeDetail = sampleSku.SkuSizeDetails.Any(),
+                sizeDetail = sampleSku.SkuSizeDetails.FirstOrDefault() != null ? new
+                {
+                    width = sampleSku.SkuSizeDetails.First().Width,
+                    length = sampleSku.SkuSizeDetails.First().Length,
+                    height = sampleSku.SkuSizeDetails.First().Height,
+                    weight = sampleSku.SkuSizeDetails.First().Weight
+                } : null
+            };
+        }
     }
 }

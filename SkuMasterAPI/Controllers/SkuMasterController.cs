@@ -73,5 +73,39 @@ namespace SkuMasterAPI.Controllers
             }
             return Ok(new { message = "Updated successfully" });
         }
+
+        /// <summary>
+        /// Get database tables info
+        /// </summary>
+        [HttpGet("debug/tables")]
+        public async Task<ActionResult> GetDatabaseTables()
+        {
+            try
+            {
+                var tables = await _skuMasterService.GetDatabaseTablesAsync();
+                return Ok(new { tables = tables });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get sample data from SKUMASTER table
+        /// </summary>
+        [HttpGet("debug/sample")]
+        public async Task<ActionResult> GetSampleData()
+        {
+            try
+            {
+                var sample = await _skuMasterService.GetSampleDataAsync();
+                return Ok(sample);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }

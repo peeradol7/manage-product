@@ -61,6 +61,16 @@ namespace SkuMasterAPI.Application.DTOs
 
         public List<string> Errors { get; set; } = new List<string>();
         public List<string> Warnings { get; set; } = new List<string>();
+
+        // Add properties for mobile compatibility (lowercase)
+        public bool success => Success;
+        public string message => Message;
+        public string? updatedSkuName => UpdatedSkuName;
+        public List<string> uploadedImageUrls => UploadedImages.Select(img => img.ImagePath ?? img.ImageName).ToList();
+        public List<int> deletedImageIds => DeletedImageIds;
+        public List<string> deletedImageFileNames => DeletedImageFileNames;
+        public SkuSizeDetailDto? updatedSizeDetail => UpdatedSizeDetail;
+        public List<string> warnings => Warnings;
     }
 
     // Simplified Detail DTO for response
