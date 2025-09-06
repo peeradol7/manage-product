@@ -145,5 +145,32 @@ namespace SkuMasterAPI.Controllers
                 return BadRequest(new { error = ex.Message, skuKey = key });
             }
         }
+
+        /// <summary>
+        /// Search for SKU by name to find "missing" items
+        /// </summary>
+        [HttpGet("debug/search")]
+        public async Task<ActionResult> SearchSkuByName([FromQuery] string name)
+        {
+            try
+            {
+                var results = await _skuMasterService.SearchByNameAsync(name);
+                return Ok(new
+                {
+                    searchTerm = name,
+                    count = results.Count,
+                    results = results.Select(s => new
+                    {
+                        skuKey = s.SkuKey,
+                        skuName = s.SkuName,
+                        skuCode = s.SkuCode
+                    })
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message, searchTerm = name });
+            }
+        }
     }
 }

@@ -48,9 +48,16 @@ namespace SkuMasterAPI.Controllers
 
                 if (!string.IsNullOrEmpty(dto.SkuName))
                 {
-                    // Clean the SkuName: remove spaces and keep only letters
-                    var cleanedSkuName = _stringCleaningService.CleanText(dto.SkuName);
-                    skuMaster.SkuName = !string.IsNullOrEmpty(cleanedSkuName) ? cleanedSkuName : dto.SkuName;
+                    // Only update SkuName if it's actually different to avoid unnecessary changes
+                    if (skuMaster.SkuName != dto.SkuName)
+                    {
+                        Console.WriteLine($"Updating SkuName for SKU {dto.SkuKey}: '{skuMaster.SkuName}' -> '{dto.SkuName}'");
+                        skuMaster.SkuName = dto.SkuName;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"SkuName unchanged for SKU {dto.SkuKey}: '{skuMaster.SkuName}'");
+                    }
                 }
 
                 // Handle deletion by fileName (preferred method)

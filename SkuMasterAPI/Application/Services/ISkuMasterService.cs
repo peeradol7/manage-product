@@ -1,4 +1,5 @@
 using SkuMasterAPI.Application.DTOs;
+using SkuMasterAPI.Models;
 
 namespace SkuMasterAPI.Application.Services
 {
@@ -9,5 +10,6 @@ namespace SkuMasterAPI.Application.Services
         Task<bool> UpdateBasicInfoAsync(int key, UpdateSkuMasterBasicDto dto);
         Task<List<string>> GetDatabaseTablesAsync();
         Task<object> GetSampleDataAsync();
+        Task<List<SkuMaster>> SearchByNameAsync(string name);
     }
 }

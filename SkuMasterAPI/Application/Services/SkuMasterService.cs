@@ -98,7 +98,7 @@ namespace SkuMasterAPI.Application.Services
             var sizeDetail = await _context.SkuSizeDetails
                 .AsNoTracking() // Don't track this query to get fresh data
                 .FirstOrDefaultAsync(s => s.MasterId == key);
-                
+
             Console.WriteLine($"GetDetailByKeyAsync for SKU {key}: Found size detail = {sizeDetail != null}");
 
             return new SimpleSkuMasterDetailDto
@@ -183,6 +183,14 @@ namespace SkuMasterAPI.Application.Services
                     weight = sizeDetail.Weight
                 } : null
             };
+        }
+
+        public async Task<List<SkuMaster>> SearchByNameAsync(string name)
+        {
+            return await _context.SkuMasters
+                .Where(s => s.SkuName.Contains(name))
+                .OrderBy(s => s.SkuName)
+                .ToListAsync();
         }
     }
 }
