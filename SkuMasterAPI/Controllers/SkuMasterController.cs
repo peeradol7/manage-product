@@ -50,14 +50,25 @@ namespace SkuMasterAPI.Controllers
         [HttpGet("{key}/detail")]
         public async Task<ActionResult<SimpleSkuMasterDetailDto>> GetSkuMasterDetail(int key)
         {
-            var sku = await _skuMasterService.GetDetailByKeyAsync(key);
-
-            if (sku == null)
+            try
             {
-                return NotFound();
-            }
+                var sku = await _skuMasterService.GetDetailByKeyAsync(key);
 
-            return Ok(sku);
+                if (sku == null)
+                {
+                    return NotFound(new { message = "SkuMaster not found", key = key });
+                }
+
+                // Add cache headers for better performance
+                Response.Headers["Cache-Control"] = "public, max-age=300"; // 5 minutes cache
+                Response.Headers["ETag"] = $"\"{key}-{DateTime.UtcNow.Ticks / TimeSpan.TicksPerMinute}\"";
+
+                return Ok(sku);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error", error = ex.Message });
+            }
         }
 
         /// <summary>

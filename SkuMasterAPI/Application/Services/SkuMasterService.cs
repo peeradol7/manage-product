@@ -87,25 +87,28 @@ namespace SkuMasterAPI.Application.Services
 
         public async Task<SimpleSkuMasterDetailDto?> GetDetailByKeyAsync(int key)
         {
-            var sku = await _context.SkuMasters
-                .Include(s => s.SkuMasterImages)
-                .FirstOrDefaultAsync(s => s.SkuKey == key);
+            // Use a single optimized query to get all data at once
+            var result = await _context.SkuMasters
+                .Where(s => s.SkuKey == key)
+                .Select(s => new
+                {
+                    SkuMaster = s,
+                    Images = s.SkuMasterImages.Select(img => img.ImageName).ToList(),
+                    SizeDetail = s.SkuSizeDetails.FirstOrDefault()
+                })
+                .FirstOrDefaultAsync();
 
-            if (sku == null) return null;
-
-            // Query SkuSizeDetails separately to ensure fresh data
-            var sizeDetail = await _context.SkuSizeDetails
-                .FirstOrDefaultAsync(s => s.MasterId == key);
+            if (result == null) return null;
 
             return new SimpleSkuMasterDetailDto
             {
-                SkuKey = sku.SkuKey,
-                SkuName = sku.SkuName,
-                ImageUrls = _urlHelperService.GetImageUrls(sku.SkuMasterImages.Select(img => img.ImageName)),
-                Width = sizeDetail?.Width,
-                Length = sizeDetail?.Length,
-                Height = sizeDetail?.Height,
-                Weight = sizeDetail?.Weight
+                SkuKey = result.SkuMaster.SkuKey,
+                SkuName = result.SkuMaster.SkuName,
+                ImageUrls = _urlHelperService.GetImageUrls(result.Images),
+                Width = result.SizeDetail?.Width,
+                Length = result.SizeDetail?.Length,
+                Height = result.SizeDetail?.Height,
+                Weight = result.SizeDetail?.Weight
             };
         }
 
