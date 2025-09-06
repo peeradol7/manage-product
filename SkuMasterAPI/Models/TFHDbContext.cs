@@ -117,6 +117,37 @@ namespace SkuMasterAPI.Models
                 // Add index on MasterId for better performance
                 entity.HasIndex(e => e.MasterId);
             });
+
+            // Configure SkuSizeDetail entity
+            modelBuilder.Entity<SkuSizeDetail>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Width)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.Length)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.Height)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.Weight)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.DateTimeUpdate)
+                    .IsRequired();
+
+                // Configure 1:1 relationship between SkuMaster and SkuSizeDetail
+                entity.HasOne(e => e.SkuMaster)
+                    .WithMany(s => s.SkuSizeDetails)
+                    .HasForeignKey(e => e.MasterId)
+                    .HasPrincipalKey(s => s.SkuKey)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Add index on MasterId for better performance
+                entity.HasIndex(e => e.MasterId);
+            });
         }
     }
 }

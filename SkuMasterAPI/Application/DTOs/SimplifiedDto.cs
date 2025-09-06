@@ -62,14 +62,29 @@ namespace SkuMasterAPI.Application.DTOs
         public List<string> Errors { get; set; } = new List<string>();
         public List<string> Warnings { get; set; } = new List<string>();
 
-        // Add properties for mobile compatibility (lowercase)
+        // Add properties for mobile compatibility (lowercase) - using JsonPropertyName to avoid conflicts
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
         public bool success => Success;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
         public string message => Message;
+
+        [System.Text.Json.Serialization.JsonPropertyName("updatedSkuName")]
         public string? updatedSkuName => UpdatedSkuName;
+
+        [System.Text.Json.Serialization.JsonPropertyName("uploadedImageUrls")]
         public List<string> uploadedImageUrls => UploadedImages.Select(img => img.ImagePath ?? img.ImageName).ToList();
+
+        [System.Text.Json.Serialization.JsonPropertyName("deletedImageIds")]
         public List<int> deletedImageIds => DeletedImageIds;
+
+        [System.Text.Json.Serialization.JsonPropertyName("deletedImageFileNames")]
         public List<string> deletedImageFileNames => DeletedImageFileNames;
+
+        [System.Text.Json.Serialization.JsonPropertyName("updatedSizeDetail")]
         public SkuSizeDetailDto? updatedSizeDetail => UpdatedSizeDetail;
+
+        [System.Text.Json.Serialization.JsonPropertyName("warnings")]
         public List<string> warnings => Warnings;
     }
 
