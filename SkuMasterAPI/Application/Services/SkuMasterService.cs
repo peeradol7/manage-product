@@ -89,12 +89,13 @@ namespace SkuMasterAPI.Application.Services
         {
             var sku = await _context.SkuMasters
                 .Include(s => s.SkuMasterImages)
-                .Include(s => s.SkuSizeDetails)
                 .FirstOrDefaultAsync(s => s.SkuKey == key);
 
             if (sku == null) return null;
 
-            var sizeDetail = sku.SkuSizeDetails.FirstOrDefault();
+            // Query SkuSizeDetails separately to ensure fresh data
+            var sizeDetail = await _context.SkuSizeDetails
+                .FirstOrDefaultAsync(s => s.MasterId == key);
 
             return new SimpleSkuMasterDetailDto
             {
@@ -126,6 +127,10 @@ namespace SkuMasterAPI.Application.Services
             }
 
             await _context.SaveChangesAsync();
+
+            // Clear change tracker to ensure fresh data on next query
+            _context.ChangeTracker.Clear();
+
             return true;
         }
 
@@ -147,13 +152,16 @@ namespace SkuMasterAPI.Application.Services
             // Get sample data from SKUMASTER table
             var sampleSku = await _context.SkuMasters
                 .Include(s => s.SkuMasterImages)
-                .Include(s => s.SkuSizeDetails)
                 .FirstOrDefaultAsync();
 
             if (sampleSku == null)
             {
                 return new { message = "No data found in SKUMASTER table" };
             }
+
+            // Query SkuSizeDetails separately to ensure fresh data
+            var sizeDetail = await _context.SkuSizeDetails
+                .FirstOrDefaultAsync(s => s.MasterId == sampleSku.SkuKey);
 
             return new
             {
@@ -162,13 +170,13 @@ namespace SkuMasterAPI.Application.Services
                 skuCode = sampleSku.SkuCode,
                 skuPrice = sampleSku.SkuPrice,
                 imageCount = sampleSku.SkuMasterImages.Count,
-                hasSizeDetail = sampleSku.SkuSizeDetails.Any(),
-                sizeDetail = sampleSku.SkuSizeDetails.FirstOrDefault() != null ? new
+                hasSizeDetail = sizeDetail != null,
+                sizeDetail = sizeDetail != null ? new
                 {
-                    width = sampleSku.SkuSizeDetails.First().Width,
-                    length = sampleSku.SkuSizeDetails.First().Length,
-                    height = sampleSku.SkuSizeDetails.First().Height,
-                    weight = sampleSku.SkuSizeDetails.First().Weight
+                    width = sizeDetail.Width,
+                    length = sizeDetail.Length,
+                    height = sizeDetail.Height,
+                    weight = sizeDetail.Weight
                 } : null
             };
         }

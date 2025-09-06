@@ -205,6 +205,9 @@ namespace SkuMasterAPI.Controllers
                 // Save all changes
                 await _context.SaveChangesAsync();
 
+                // Clear change tracker to ensure fresh data on next query
+                _context.ChangeTracker.Clear();
+
                 response.Success = true;
                 response.Message = "SkuMaster updated successfully";
                 response.UpdatedSkuName = skuMaster.SkuName;
