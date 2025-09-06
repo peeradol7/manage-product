@@ -7,7 +7,7 @@ import '../models/sku_master.dart';
 
 class ApiService {
   late Dio _dio;
-  static const String baseUrl = 'https://bda1c20cc5ee.ngrok-free.app/api';
+  static const String baseUrl = 'https://86ed19c82374.ngrok-free.app/api';
 
   ApiService() {
     _dio = Dio(
