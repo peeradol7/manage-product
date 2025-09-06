@@ -87,28 +87,29 @@ namespace SkuMasterAPI.Application.Services
 
         public async Task<SimpleSkuMasterDetailDto?> GetDetailByKeyAsync(int key)
         {
-            // Use a single optimized query to get all data at once
-            var result = await _context.SkuMasters
-                .Where(s => s.SkuKey == key)
-                .Select(s => new
-                {
-                    SkuMaster = s,
-                    Images = s.SkuMasterImages.Select(img => img.ImageName).ToList(),
-                    SizeDetail = s.SkuSizeDetails.FirstOrDefault()
-                })
-                .FirstOrDefaultAsync();
+            // Get SkuMaster with images
+            var sku = await _context.SkuMasters
+                .Include(s => s.SkuMasterImages)
+                .FirstOrDefaultAsync(s => s.SkuKey == key);
 
-            if (result == null) return null;
+            if (sku == null) return null;
+
+            // Get size details with a separate query to avoid caching issues
+            var sizeDetail = await _context.SkuSizeDetails
+                .AsNoTracking() // Don't track this query to get fresh data
+                .FirstOrDefaultAsync(s => s.MasterId == key);
+                
+            Console.WriteLine($"GetDetailByKeyAsync for SKU {key}: Found size detail = {sizeDetail != null}");
 
             return new SimpleSkuMasterDetailDto
             {
-                SkuKey = result.SkuMaster.SkuKey,
-                SkuName = result.SkuMaster.SkuName,
-                ImageUrls = _urlHelperService.GetImageUrls(result.Images),
-                Width = result.SizeDetail?.Width,
-                Length = result.SizeDetail?.Length,
-                Height = result.SizeDetail?.Height,
-                Weight = result.SizeDetail?.Weight
+                SkuKey = sku.SkuKey,
+                SkuName = sku.SkuName,
+                ImageUrls = _urlHelperService.GetImageUrls(sku.SkuMasterImages.Select(img => img.ImageName)),
+                Width = sizeDetail?.Width,
+                Length = sizeDetail?.Length,
+                Height = sizeDetail?.Height,
+                Weight = sizeDetail?.Weight
             };
         }
 

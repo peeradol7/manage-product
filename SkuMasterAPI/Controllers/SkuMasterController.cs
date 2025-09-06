@@ -59,9 +59,10 @@ namespace SkuMasterAPI.Controllers
                     return NotFound(new { message = "SkuMaster not found", key = key });
                 }
 
-                // Add cache headers for better performance
-                Response.Headers["Cache-Control"] = "public, max-age=300"; // 5 minutes cache
-                Response.Headers["ETag"] = $"\"{key}-{DateTime.UtcNow.Ticks / TimeSpan.TicksPerMinute}\"";
+                // Disable caching to ensure fresh data
+                Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+                Response.Headers["Pragma"] = "no-cache";
+                Response.Headers["Expires"] = "0";
 
                 return Ok(sku);
             }
@@ -116,6 +117,32 @@ namespace SkuMasterAPI.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Test size details for a specific SKU
+        /// </summary>
+        [HttpGet("debug/size/{key}")]
+        public async Task<ActionResult> TestSizeDetails(int key)
+        {
+            try
+            {
+                var detail = await _skuMasterService.GetDetailByKeyAsync(key);
+                return Ok(new
+                {
+                    skuKey = key,
+                    found = detail != null,
+                    hasSize = detail?.Width != null || detail?.Length != null || detail?.Height != null || detail?.Weight != null,
+                    width = detail?.Width,
+                    length = detail?.Length,
+                    height = detail?.Height,
+                    weight = detail?.Weight
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message, skuKey = key });
             }
         }
     }

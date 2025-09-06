@@ -203,7 +203,8 @@ namespace SkuMasterAPI.Controllers
                 }
 
                 // Save all changes
-                await _context.SaveChangesAsync();
+                var saveResult = await _context.SaveChangesAsync();
+                Console.WriteLine($"SaveChanges result: {saveResult} changes saved for SKU {dto.SkuKey}");
 
                 // Clear change tracker to ensure fresh data on next query
                 _context.ChangeTracker.Clear();
