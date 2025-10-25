@@ -13,18 +13,57 @@ namespace SkuMasterAPI.Application.Services
     public class StringCleaningService : IStringCleaningService
     {
         /// <summary>
-        /// Remove all spaces and keep only letters (Thai and English)
+        /// Clean text while preserving spaces, numbers, and common special characters
         /// </summary>
         public string CleanText(string? input)
         {
             if (string.IsNullOrWhiteSpace(input))
                 return string.Empty;
 
-            // Remove all spaces first
-            var noSpaces = input.Replace(" ", "");
+            // Keep spaces, letters, numbers, Thai characters, and common special characters
+            var result = new StringBuilder();
 
-            // Keep only Thai and English letters
-            return CleanToLettersOnly(noSpaces);
+            foreach (char c in input)
+            {
+                // Keep Thai characters, English letters, numbers, spaces, and common special characters
+                if ((c >= 'A' && c <= 'Z') ||
+                    (c >= 'a' && c <= 'z') ||
+                    (c >= '0' && c <= '9') ||
+                    (c >= '\u0E00' && c <= '\u0E7F') ||
+                    c == ' ' ||  // Keep spaces
+                    c == '@' ||  // Keep @
+                    c == '#' ||  // Keep #
+                    c == '$' ||  // Keep $
+                    c == '%' ||  // Keep %
+                    c == '&' ||  // Keep &
+                    c == '*' ||  // Keep *
+                    c == '+' ||  // Keep +
+                    c == '-' ||  // Keep -
+                    c == '=' ||  // Keep =
+                    c == '_' ||  // Keep _
+                    c == '.' ||  // Keep .
+                    c == ',' ||  // Keep ,
+                    c == ':' ||  // Keep :
+                    c == ';' ||  // Keep ;
+                    c == '!' ||  // Keep !
+                    c == '?' ||  // Keep ?
+                    c == '(' ||  // Keep (
+                    c == ')' ||  // Keep )
+                    c == '[' ||  // Keep [
+                    c == ']' ||  // Keep ]
+                    c == '{' ||  // Keep {
+                    c == '}' ||  // Keep }
+                    c == '|' ||  // Keep |
+                    c == '\\' || // Keep \
+                    c == '/' ||  // Keep /
+                    c == '<' ||  // Keep <
+                    c == '>')    // Keep >
+                {
+                    result.Append(c);
+                }
+            }
+
+            return result.ToString();
         }
 
         /// <summary>
