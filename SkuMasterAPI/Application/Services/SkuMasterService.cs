@@ -69,6 +69,8 @@ namespace SkuMasterAPI.Application.Services
             foreach (var item in items)
             {
                 item.ImageUrls = _urlHelperService.GetImageUrls(item.ImageUrls);
+                // Remove "(DENR)" from SkuName if present
+                item.SkuName = RemoveDenrTag(item.SkuName);
             }
 
             var totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize);
@@ -104,7 +106,7 @@ namespace SkuMasterAPI.Application.Services
             return new SimpleSkuMasterDetailDto
             {
                 SkuKey = sku.SkuKey,
-                SkuName = sku.SkuName,
+                SkuName = RemoveDenrTag(sku.SkuName), // Remove "(DENR)" if present
                 ImageUrls = _urlHelperService.GetImageUrls(sku.SkuMasterImages.Select(img => img.ImageName)),
                 Width = sizeDetail?.Width,
                 Length = sizeDetail?.Length,
@@ -191,6 +193,24 @@ namespace SkuMasterAPI.Application.Services
                 .Where(s => s.SkuName.Contains(name))
                 .OrderBy(s => s.SkuName)
                 .ToListAsync();
+        }
+
+        /// <summary>
+        /// Remove "(DENR)" tag from product name
+        /// </summary>
+        private string RemoveDenrTag(string skuName)
+        {
+            if (string.IsNullOrEmpty(skuName))
+                return skuName;
+
+            // Remove "(DENR)" with various formats
+            return skuName
+                .Replace("(DENR)", "", StringComparison.OrdinalIgnoreCase)
+                .Replace("( DENR )", "", StringComparison.OrdinalIgnoreCase)
+                .Replace("(DENR )", "", StringComparison.OrdinalIgnoreCase)
+                .Replace("( DENR)", "", StringComparison.OrdinalIgnoreCase)
+                .Replace("[DENR]", "", StringComparison.OrdinalIgnoreCase)
+                .Trim(); // Remove leading/trailing spaces
         }
     }
 }
