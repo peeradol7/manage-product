@@ -20,60 +20,62 @@ namespace SkuMasterAPI.Models
             modelBuilder.Entity<SkuMaster>(entity =>
             {
                 entity.HasKey(e => e.SkuKey);
-                entity.HasIndex(e => e.SkuCode).IsUnique();
-                entity.HasIndex(e => e.SkuBarcode);
+                // Note: Indexes on SkuCode and SkuBarcode are commented out because
+                // nvarchar(max) columns cannot be indexed in SQL Server
+                // entity.HasIndex(e => e.SkuCode).IsUnique();
+                // entity.HasIndex(e => e.SkuBarcode);
 
                 entity.Property(e => e.SkuCode)
                     .IsRequired()
-                    .HasMaxLength(24);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuName)
                     .IsRequired()
-                    .HasMaxLength(60);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuEName)
-                    .HasMaxLength(60);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuBarcode)
-                    .HasMaxLength(24);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuEnable)
                     .IsRequired()
-                    .HasMaxLength(1);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuPEnable)
                     .IsRequired()
-                    .HasMaxLength(1);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuMsg1)
-                    .HasMaxLength(60);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuMsg2)
-                    .HasMaxLength(60);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuMsg3)
-                    .HasMaxLength(60);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuSpec)
-                    .HasMaxLength(7000);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuUsage)
-                    .HasMaxLength(7000);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuRemark)
-                    .HasMaxLength(255);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuAlertMsg)
-                    .HasMaxLength(255);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuEqFactor)
-                    .HasMaxLength(20);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuEqName)
-                    .HasMaxLength(60);
+                    .HasColumnType("nvarchar(max)");
 
                 entity.Property(e => e.SkuLastupd)
-                    .HasMaxLength(17);
+                    .HasColumnType("nvarchar(max)");
 
                 // Configure money type columns
                 entity.Property(e => e.SkuVat).HasColumnType("money");
@@ -105,7 +107,7 @@ namespace SkuMasterAPI.Models
 
                 entity.Property(e => e.ImageName)
                     .IsRequired()
-                    .HasMaxLength(255);
+                    .HasColumnType("nvarchar(max)");
 
                 // Configure 1:n relationship between SkuMaster and SkuMasterImage
                 entity.HasOne(e => e.SkuMaster)

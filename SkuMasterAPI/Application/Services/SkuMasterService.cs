@@ -122,9 +122,7 @@ namespace SkuMasterAPI.Application.Services
 
             if (!string.IsNullOrEmpty(dto.SkuName))
             {
-                // Clean the SkuName: remove spaces and keep only letters
-                var cleanedSkuName = _stringCleaningService.CleanText(dto.SkuName);
-                sku.SkuName = !string.IsNullOrEmpty(cleanedSkuName) ? cleanedSkuName : dto.SkuName;
+                sku.SkuName = dto.SkuName;
             }
 
             if (dto.SkuPrice.HasValue)
@@ -134,7 +132,6 @@ namespace SkuMasterAPI.Application.Services
 
             await _context.SaveChangesAsync();
 
-            // Clear change tracker to ensure fresh data on next query
             _context.ChangeTracker.Clear();
 
             return true;
@@ -144,7 +141,6 @@ namespace SkuMasterAPI.Application.Services
         {
             var tables = new List<string>();
 
-            // Get table names from sys.tables
             var tableNames = await _context.Database.SqlQueryRaw<string>(
                 "SELECT name FROM sys.tables ORDER BY name").ToListAsync();
 
